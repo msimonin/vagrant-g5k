@@ -12,7 +12,6 @@ module VagrantPlugins
         end
 
         def call(env)
-          puts 'read_state'
           env[:machine_state_id] = read_state(env[:machine], env[:g5k_connection])
           @app.call(env)
         end

@@ -14,7 +14,6 @@ module VagrantPlugins
         end
 
         def call(env)
-          puts 'connect_g5k'
           env[:g5k_connection] = Connection.new(
              :logger => env[:ui],
              :username => env[:machine].provider_config.username,

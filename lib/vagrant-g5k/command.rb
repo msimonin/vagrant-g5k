@@ -11,7 +11,6 @@ module VagrantPlugins
       end
 
       def execute
-        puts "I'm listing available images"
         conn = Connection.instance
         # someday pretty print the output
         puts conn.list_images

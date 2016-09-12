@@ -96,7 +96,7 @@ module VagrantPlugins
           @logger.info("Reserving a subnet")
           job_id = exec("oarsub -l \"slash_22=1, walltime=#{WALLTIME}\" --name #{JOB_SUBNET_NAME} \"sleep 3600\" | grep OAR_JOB_ID | cut -d '='  -f2").chomp
           begin
-            retryable(:on => VagrantPlugins::G5K::Errors::JobNotRunning, :tries => 5, :sleep => 5) do
+            retryable(:on => VagrantPlugins::G5K::Errors::JobNotRunning, :tries => 5, :sleep => 1) do
               @logger.info("Waiting for the job to be running")
               job = check_job(job_id)
               if job.nil? or job["state"] != "Running"
@@ -135,7 +135,7 @@ module VagrantPlugins
         
 
         begin
-          retryable(:on => VagrantPlugins::G5K::Errors::JobNotRunning, :tries => 5, :sleep => 5) do
+          retryable(:on => VagrantPlugins::G5K::Errors::JobNotRunning, :tries => 5, :sleep => 1) do
             @logger.info("Waiting for the job to be running")
             job = check_job(job_id)
             if job.nil? or job["state"] != "Running"
@@ -155,7 +155,7 @@ module VagrantPlugins
 
 
       def exec(cmd)
-        puts "executing #{cmd}"
+        @logger.info("Executing #{cmd}")
         stdout = ""
         @session.exec!(cmd) do |channel, stream, data| 
           stdout << data

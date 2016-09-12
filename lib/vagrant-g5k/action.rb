@@ -54,9 +54,8 @@ module VagrantPlugins
           b.use CreateLocalWorkingDir
           b.use Call, IsCreated do |env1, b1|
             if env1[:result] then
-              puts("alredy started") 
+              b1.use MessageAlreadyCreated
             else
-              puts("starting a new vm") 
               b1.use RunInstance # launch a new instance
             end
           end
@@ -64,6 +63,8 @@ module VagrantPlugins
       end
 
       action_root = Pathname.new(File.expand_path("../action", __FILE__))
+      autoload :MessageAlreadyCreated, action_root.join("message_already_created")
+      autoload :MessageNotCreated, action_root.join("message_not_created")
       autoload :ReadSSHInfo, action_root.join("read_ssh_info")
       autoload :ReadState, action_root.join("read_state")
       autoload :ConnectG5K, action_root.join("connect_g5k")

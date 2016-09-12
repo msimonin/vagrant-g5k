@@ -8,9 +8,9 @@ Gem::Specification.new do |s|
   s.license       = "MIT"
   s.authors       = "Matthieu Simonin"
   s.email         = "matthieu.simonin@inria.fr"
-  s.homepage      = ""
-  s.summary       = "Enables to boot vm in the production environment of G5K."
-  s.description   = "Enables to boot vm in the production environment of G5K."
+  s.homepage      = "https://github.com/msimonin/vagrant-g5k"
+  s.summary       = "Enables to boot a vm in the production environment of G5K."
+  s.description   = "Enables to boot a vm in the production environment of G5K."
 
   s.required_rubygems_version = ">= 1.3.6"
   s.rubyforge_project         = "vagrant-g5k"
