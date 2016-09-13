@@ -6,7 +6,6 @@
 # Directory for qcow2 snapshots
 export TMPDIR=/tmp
 #IMAGE=/grid5000/virt-images/alpine-docker.qcow2
-IMAGE=$1
 
 # GET Virtual IP information
 IP_ADDR=$(/usr/local/bin/g5k-subnets -im | head -1 | awk '{print $1}')
@@ -38,7 +37,7 @@ trap clean_shutdown 12
 # Launch virtual machine
 #kvm -m $VM_MEM -smp $SMP -drive file=/grid5000/images/KVM/alpine_docker.qcow2,if=virtio -snapshot -fsdev local,security_model=none,id=fsdev0,path=$HOME -device virtio-9p-pci,id=fs0,fsdev=fsdev0,mount_tag=hostshare -nographic -net nic,model=virtio,macaddr=$MAC_ADDR -net tap,ifname=$TAP,script=no -monitor unix:/tmp/alpine_docker_vm.mon,server,nowait -localtime -enable-kvm &
 #kvm -m $VM_MEM -smp $SMP -drive file=$IMAGE,if=virtio -snapshot -fsdev local,security_model=none,id=fsdev0,path=$HOME -device virtio-9p-pci,id=fs0,fsdev=fsdev0,mount_tag=hostshare -nographic -net nic,model=virtio,macaddr=$MAC_ADDR -net tap,ifname=$TAP,script=no -monitor unix:/tmp/vagrant-g5k.mon,server,nowait -localtime -enable-kvm &
-kvm -m $VM_MEM -smp $SMP -drive file=$IMAGE,if=virtio -snapshot -fsdev local,security_model=none,id=fsdev0,path=$HOME -device virtio-9p-pci,id=fs0,fsdev=fsdev0,mount_tag=hostshare -nographic -net nic,model=virtio -net user,hostfwd=tcp::2222-:22  -monitor unix:/tmp/vagrant-g5k.mon,server,nowait -localtime -enable-kvm &
+kvm -m $VM_MEM -smp $SMP -snapshot -fsdev local,security_model=none,id=fsdev0,path=$HOME -device virtio-9p-pci,id=fs0,fsdev=fsdev0,mount_tag=hostshare -nographic -monitor unix:/tmp/vagrant-g5k.mon,server,nowait -localtime -enable-kvm $@ &
 
 wait
 

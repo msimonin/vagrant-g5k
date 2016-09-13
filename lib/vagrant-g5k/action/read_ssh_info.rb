@@ -20,7 +20,8 @@ module VagrantPlugins
         def read_ssh_info(conn, machine)
           return nil if machine.id.nil?
 
-          return { :host          => conn.ip,
+          return { :host          => conn.node,
+                   :port          => 2222,
                    :proxy_command => "ssh #{conn.username}@access.grid5000.fr nc %h %p",
 }
         end

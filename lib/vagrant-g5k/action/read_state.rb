@@ -19,10 +19,6 @@ module VagrantPlugins
         def read_state(machine, conn)
           return :not_created if machine.id.nil?
           # is there a job running for this vm ?
-          subnet = conn.check_or_reserve_subnet()
-          if subnet.nil? 
-            return :missing_subnet
-          end
           job = conn.check_job(machine.id)
           if job.nil? # TODO or fraged
             return :not_created

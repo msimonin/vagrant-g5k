@@ -5,7 +5,7 @@ require 'json'
 require 'vagrant/util/retryable'
 
 WORKING_DIR = ".vagrant-g5k"
-LAUNCHER_SCRIPT = "launch_vm.sh"
+LAUNCHER_SCRIPT = "launch_vm_fwd.sh"
 JOB_SUBNET_NAME = "vagrant-g5k-subnet"
 WALLTIME="01:00:00"
 
@@ -28,9 +28,7 @@ module VagrantPlugins
       
       attr_accessor :pool
 
-      attr_accessor :ip
-
-      attr_accessor :mac
+      attr_accessor :ports
 
       @@locations = [
         {
@@ -44,9 +42,10 @@ module VagrantPlugins
         args.each do |k,v|
           instance_variable_set("@#{k}", v) unless v.nil?
         end
+        @logger.info("connecting with #{@username} on site #{@site}")
+        gateway = Net::SSH::Gateway.new("access.grid5000.fr", @username, :forward_agent => true)
 
-        gateway = Net::SSH::Gateway.new("access.grid5000.fr", "msimonin", :forward_agent => true)
-        @session = gateway.ssh(@site, "msimonin")
+        @session = gateway.ssh(@site, @username)
       end
 
       def list_images()
@@ -86,52 +85,22 @@ module VagrantPlugins
         return r
       end
 
-      def check_or_reserve_subnet()
-        @logger.info("Checking if a subnet has been reserved")
-        oarstat = exec("oarstat --json")
-        oarstat = JSON.load(oarstat)
-        job = oarstat.select!{ |k,v| v["owner"] == @username && v["name"] == JOB_SUBNET_NAME }.values.first
-        if job.nil?
-          # we have to reserve a subnet
-          @logger.info("Reserving a subnet")
-          job_id = exec("oarsub -l \"slash_22=1, walltime=#{WALLTIME}\" --name #{JOB_SUBNET_NAME} \"sleep 3600\" | grep OAR_JOB_ID | cut -d '='  -f2").chomp
-          begin
-            retryable(:on => VagrantPlugins::G5K::Errors::JobNotRunning, :tries => 100, :sleep => 3) do
-              @logger.info("Waiting for the job to be running")
-              job = check_job(job_id)
-              if job.nil? or job["state"] != "Running"
-                raise VagrantPlugins::G5K::Errors::JobNotRunning 
-              end
-              break
-            end
-          rescue VagrantPlugins::G5K::Errors::JobNotRunning
-            @logger.error("Tired of waiting")
-            raise VagrantPlugins::G5K::Errors::JobNotRunning
-          end
-        end
-        # get the macs ips addresses pool
-        im = exec("g5k-subnets -j #{job["Job_Id"]} -im")
-        @pool = im.split("\n").map{|i| i.split("\t")}
-        @ip, @mac = @pool[0]
-        @logger.info("Get the mac #{mac} and the corresponding ip #{ip} from the subnet")
-      end
-
-
       def launch_vm(env)
         launcher_path = File.join(File.dirname(__FILE__), LAUNCHER_SCRIPT)
-        @logger.info("Launching the VM on Grid'5000")
+        @logger.info("Launching the VM on Grid'50001")
         # Checking the subnet job
-        subnet = check_or_reserve_subnet()
         @logger.info("Uploading launcher")
         # uploading the launcher
         launcher_remote_path = File.join("/home", @username , WORKING_DIR, LAUNCHER_SCRIPT)
         upload(launcher_path, launcher_remote_path)
-        # creating the params file
-        params_path = File.join("/home", @username, WORKING_DIR, 'params')
-        exec("echo #{@image_location} #{@mac} > #{params_path}")
+
+        # Generate partial arguments for the kvm command
+        drive = _generate_drive()
+        net = _generate_net()
+        args = [drive, net].join(" ")
         # Submitting a new job
         @logger.info("Starting a new job")
-        job_id = exec("oarsub -t allow_classic_ssh -l \"{virtual!=\'none\'}/nodes=1,walltime=#{WALLTIME}\" --name #{env[:machine].name} --checkpoint 60 --signal 12  --array-param-file #{params_path} #{launcher_remote_path} | grep OAR_JOB_ID | cut -d '='  -f2").chomp
+        job_id = exec("oarsub -t allow_classic_ssh -l \"{virtual!=\'none\'}/nodes=1,walltime=#{WALLTIME}\" --name #{env[:machine].name} --checkpoint 60 --signal 12  \"#{launcher_remote_path} #{args}\" | grep OAR_JOB_ID | cut -d '='  -f2").chomp
         
 
         begin
@@ -167,7 +136,19 @@ module VagrantPlugins
         @session.scp.upload!(src, dst)
       end
 
+      def _generate_drive()
+        return "-drive file=#{@image_location},if=virtio"
+      end
 
+      def _generate_net()
+        # default port to use for ssh
+        @ports << "2222-:22"
+        fwd_ports = @ports.map do |p|
+          "hostfwd=tcp::#{p}"
+        end.join(',')
+        net = "-net nic,model=virtio -net user,#{fwd_ports}"
+        return net
+      end
 
 
     end

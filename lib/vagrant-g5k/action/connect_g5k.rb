@@ -18,7 +18,8 @@ module VagrantPlugins
              :logger => env[:ui],
              :username => env[:machine].provider_config.username,
              :image_location => env[:machine].provider_config.image_location, 
-             :site => env[:machine].provider_config.site
+             :site => env[:machine].provider_config.site,
+             :ports => env[:machine].provider_config.ports
           )
           @app.call(env)
         end

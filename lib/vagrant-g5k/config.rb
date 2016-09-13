@@ -29,6 +29,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :image_strategy
 
+      # G5K ports mapping
+      # 
+      #
+      # @return [Array]
+      attr_accessor :ports
 
       def initialize()
         @username     = nil
