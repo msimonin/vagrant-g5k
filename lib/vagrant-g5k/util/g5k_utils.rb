@@ -73,7 +73,7 @@ module VagrantPlugins
       end
 
 
-      def check_job(job_id)
+     def check_job(job_id)
         oarstat = exec("oarstat --json")
         oarstat = JSON.load(oarstat)
         r = oarstat.select!{ |k,v| k == job_id and v["owner"] == @username }.values.first

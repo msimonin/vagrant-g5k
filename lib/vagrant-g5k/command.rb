@@ -11,10 +11,9 @@ module VagrantPlugins
       end
 
       def execute
-        conn = Connection.instance
-        # someday pretty print the output
-        puts conn.list_images
+        # TODO
       end
+
     end
   end
 end
