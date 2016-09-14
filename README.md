@@ -25,3 +25,9 @@ $ vagrant up --provider=g5k
 ## Configuration
 
 Check the Vagrantfile.
+
+## Supported operations
+
+* `vagrant up`
+* `vagrant ssh`
+* `vagrant destroy`
