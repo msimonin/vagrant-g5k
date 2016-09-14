@@ -62,16 +62,40 @@ module VagrantPlugins
         end
       end
 
+      # This action is called to terminate the remote machine.
+      def self.action_destroy
+        Vagrant::Action::Builder.new.tap do |b|
+          b.use Call, DestroyConfirm do |env, b2|
+            if env[:result]
+              b2.use ConfigValidate
+              b2.use Call, IsCreated do |env2, b3|
+                if !env2[:result]
+                  b3.use MessageNotCreated
+                  next
+                end
+
+                b3.use ConnectG5K
+                b3.use DeleteJob
+              end
+            else
+              b2.use MessageWillNotDestroy
+            end
+          end
+        end
+      end
+
+
       action_root = Pathname.new(File.expand_path("../action", __FILE__))
+      autoload :ConnectG5K, action_root.join("connect_g5k")
+      autoload :CreateLocalWorkingDir, action_root.join("create_local_working_dir")
+      autoload :DeleteJob, action_root.join("delete_job")
+      autoload :IsCreated, action_root.join("is_created")
       autoload :MessageAlreadyCreated, action_root.join("message_already_created")
       autoload :MessageNotCreated, action_root.join("message_not_created")
       autoload :ReadSSHInfo, action_root.join("read_ssh_info")
       autoload :ReadState, action_root.join("read_state")
-      autoload :ConnectG5K, action_root.join("connect_g5k")
-      autoload :CreateLocalWorkingDir, action_root.join("create_local_working_dir")
-      autoload :StartInstance, action_root.join("start_instance")
-      autoload :IsCreated, action_root.join("is_created")
       autoload :RunInstance, action_root.join("run_instance")
+      autoload :StartInstance, action_root.join("start_instance")
 
     end
   end
