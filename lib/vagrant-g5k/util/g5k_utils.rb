@@ -141,8 +141,6 @@ module VagrantPlugins
       end
 
       def _generate_net()
-        # default port to use for ssh
-        @ports << "2222-:22"
         fwd_ports = @ports.map do |p|
           "hostfwd=tcp::#{p}"
         end.join(',')

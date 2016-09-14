@@ -12,16 +12,28 @@ module VagrantPlugins
         end
 
         def call(env)
-          env[:machine_ssh_info] = read_ssh_info(env[:g5k_connection], env[:machine])
+          ports = env[:machine].provider_config.ports
+          ssh_fwd = ports.select{ |x| x.split(':')[1] == '22'}.first
+          if ssh_fwd.nil?
+            env[:ui].error "SSH port 22 must be forwarded"
+            raise Error "SSh port 22 isn't forwarded"
+          end
+          ssh_fwd = ssh_fwd.split('-:')[0]
+          env[:machine_ssh_info] = read_ssh_info(env[:g5k_connection], env[:machine], ssh_fwd)
 
           @app.call(env)
         end
 
-        def read_ssh_info(conn, machine)
+        def read_ssh_info(conn, machine, ssh_fwd)
           return nil if machine.id.nil?
 
+          if ssh_fwd.nil? 
+
+            raise Error "ssh_port should be forwarded"
+          end
+
           return { :host          => conn.node,
-                   :port          => 2222,
+                   :port          => ssh_fwd,
                    :proxy_command => "ssh #{conn.username}@access.grid5000.fr nc %h %p",
 }
         end
