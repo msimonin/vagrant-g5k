@@ -18,29 +18,23 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :image_location
 
-      # G5K image location (path)
-      #
-      # @return [String]
-      attr_accessor :image_type
-
-      # G5K image strategy
-      # 
-      #
-      # @return [String]
-      attr_accessor :image_strategy
-
       # G5K ports mapping
       # 
       #
       # @return [Array]
       attr_accessor :ports
 
+      # G5K backing strategy
+      # 
+      #
+      # @return [String]
+      attr_accessor :backing_strategy
+
       def initialize()
         @username     = nil
         @image_location = nil
         @site = "rennes"
-        @image_type     = "local"
-        @image_strategy = "snapshot"
+        @backing_strategy = ""
       end
 
       def finalize!()

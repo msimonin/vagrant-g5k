@@ -19,7 +19,8 @@ module VagrantPlugins
              :username => env[:machine].provider_config.username,
              :image_location => env[:machine].provider_config.image_location, 
              :site => env[:machine].provider_config.site,
-             :ports => env[:machine].provider_config.ports
+             :ports => env[:machine].provider_config.ports,
+             :backing_strategy => env[:machine].provider_config.backing_strategy
           )
           @app.call(env)
         end

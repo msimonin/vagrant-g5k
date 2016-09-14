@@ -30,6 +30,9 @@ module VagrantPlugins
 
       attr_accessor :ports
 
+      attr_accessor :backing_strategy
+
+      # legacy
       @@locations = [
         {
           :path => "/grid5000/virt-images",
@@ -97,7 +100,10 @@ module VagrantPlugins
         # Generate partial arguments for the kvm command
         drive = _generate_drive()
         net = _generate_net()
-        args = [drive, net].join(" ")
+        # TODO implement different backing strategy
+        snapshot_flag = "-snapshot" if @backing_strategy == "snapshot"
+
+        args = [drive, net, snapshot_flag].join(" ")
         # Submitting a new job
         @logger.info("Starting a new job")
         job_id = exec("oarsub -t allow_classic_ssh -l \"{virtual!=\'none\'}/nodes=1,walltime=#{WALLTIME}\" --name #{env[:machine].name} --checkpoint 60 --signal 12  \"#{launcher_remote_path} #{args}\" | grep OAR_JOB_ID | cut -d '='  -f2").chomp
