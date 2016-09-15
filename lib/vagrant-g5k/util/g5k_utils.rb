@@ -18,6 +18,8 @@ module VagrantPlugins
 
       attr_accessor :username
 
+      attr_accessor :private_key
+
       attr_accessor :site
 
       attr_accessor :image_location
@@ -46,9 +48,13 @@ module VagrantPlugins
           instance_variable_set("@#{k}", v) unless v.nil?
         end
         @logger.info("connecting with #{@username} on site #{@site}")
-        gateway = Net::SSH::Gateway.new("access.grid5000.fr", @username, :forward_agent => true)
+        options = {
+          :forward_agent => true
+        }
+        options[:keys] = [@private_key] if !@private_key.nil?
+        gateway = Net::SSH::Gateway.new("access.grid5000.fr", @username, options)
 
-        @session = gateway.ssh(@site, @username)
+        @session = gateway.ssh(@site, @username, options)
       end
 
       def list_images()

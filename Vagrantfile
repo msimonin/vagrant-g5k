@@ -1,16 +1,13 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 #
-
 # Testing purpose only
 Vagrant.require_plugin "vagrant-g5k"
 
 Vagrant.configure(2) do |config|
     # box isn't used
-    (1..3).each do |i|
-      config.vm.define "vm_#{i}" do |my|
-        my.vm.box = "dummy"
-      end
+    config.vm.define "vm" do |my|
+      my.vm.box = "dummy"
     end
 
     # user to log with inside the vm
@@ -20,7 +17,9 @@ Vagrant.configure(2) do |config|
 
     config.vm.provider "g5k" do |g5k|
       # user name used to connect to g5k
-      g5k.username = "msimonin"
+      g5k.username = ENV['USER']
+      # private key 
+      # g5k.private_key = File.join(ENV['HOME'], ".ssh/id_rsa_discovery")
       # site to use
       g5k.site = "rennes"
       # image location 

@@ -9,6 +9,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :username
 
+      # G5K private_key
+      #
+      # @return [String]
+      attr_accessor :private_key
+
       # G5K site
       #
       # @return [String]

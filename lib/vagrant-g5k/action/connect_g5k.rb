@@ -17,6 +17,7 @@ module VagrantPlugins
           env[:g5k_connection] = Connection.new(
              :logger => env[:ui],
              :username => env[:machine].provider_config.username,
+             :private_key => env[:machine].provider_config.private_key,
              :image_location => env[:machine].provider_config.image_location, 
              :site => env[:machine].provider_config.site,
              :ports => env[:machine].provider_config.ports,
