@@ -25,6 +25,9 @@ Vagrant.configure(2) do |config|
       # site to use
       g5k.site = "rennes"
 
+      # walltime to use
+      # g5k.walltime = "02:00:00" 
+
       # image location 
       g5k.image_location = "/grid5000/virt-images/alpine_docker.qcow2"
 

@@ -7,7 +7,6 @@ require 'vagrant/util/retryable'
 WORKING_DIR = ".vagrant-g5k"
 LAUNCHER_SCRIPT = "launch_vm_fwd.sh"
 JOB_SUBNET_NAME = "vagrant-g5k-subnet"
-WALLTIME="01:00:00"
 
 module VagrantPlugins
   module G5K
@@ -21,6 +20,8 @@ module VagrantPlugins
       attr_accessor :private_key
 
       attr_accessor :site
+
+      attr_accessor :walltime
 
       attr_accessor :image_location
 
@@ -112,7 +113,7 @@ module VagrantPlugins
         args = [drive, net, snapshot_flag].join(" ")
         # Submitting a new job
         @logger.info("Starting a new job")
-        job_id = exec("oarsub -t allow_classic_ssh -l \"{virtual!=\'none\'}/nodes=1,walltime=#{WALLTIME}\" --name #{env[:machine].name} --checkpoint 60 --signal 12  \"#{launcher_remote_path} #{args}\" | grep OAR_JOB_ID | cut -d '='  -f2").chomp
+        job_id = exec("oarsub -t allow_classic_ssh -l \"{virtual!=\'none\'}/nodes=1,walltime=#{@walltime}\" --name #{env[:machine].name} --checkpoint 60 --signal 12  \"#{launcher_remote_path} #{args}\" | grep OAR_JOB_ID | cut -d '='  -f2").chomp
         
 
         begin

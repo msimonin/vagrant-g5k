@@ -18,6 +18,7 @@ module VagrantPlugins
              :logger => env[:ui],
              :username => env[:machine].provider_config.username,
              :private_key => env[:machine].provider_config.private_key,
+             :walltime => env[:machine].provider_config.walltime,
              :image_location => env[:machine].provider_config.image_location, 
              :site => env[:machine].provider_config.site,
              :ports => env[:machine].provider_config.ports,

@@ -14,6 +14,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :private_key
 
+      # G5K walltime
+      #
+      # @return [String]
+      attr_accessor :walltime
+
       # G5K site
       #
       # @return [String]
@@ -40,6 +45,7 @@ module VagrantPlugins
         @image_location = nil
         @site = "rennes"
         @backing_strategy = ""
+        @walltime = "01:00:00"
       end
 
       def finalize!()
