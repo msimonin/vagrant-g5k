@@ -158,7 +158,15 @@ module VagrantPlugins
           exec("rm #{disk}")
         else
           disk = File.join(@image["pool"], cwd(env), env[:machine].name.to_s)
-          exec("rbd rm  #{disk} --conf #{@image["conf"]} --id #{@image["id"]}" )
+          begin
+            retryable(:on => VagrantPlugins::G5K::Errors::CommandError, :tries => 10, :sleep => 5) do
+              exec("rbd rm  #{disk} --conf #{@image["conf"]} --id #{@image["id"]}" )
+              break
+            end
+          rescue VagrantPlugins::G5K::Errors::CommandError
+            @ui.error("Reach max attempt while trying to remove the rbd")
+            raise VagrantPlugins::G5K::Errors::CommandError
+          end
         end
       end
 
@@ -166,20 +174,35 @@ module VagrantPlugins
       def exec(cmd)
         @logger.debug("Executing #{cmd}")
         stdout = ""
-        errors = ""
-        begin
-          @session.exec!(cmd) do |channel, stream, data| 
-            stdout << data.chomp if stream == :stdout
-            errors << data.chomp if stream == :stderr
+        stderr = ""
+        exit_code = 0
+        @session.open_channel do |channel|
+          channel.exec(cmd) do |ch, success|
+            abort "could not execute command" unless success
+
+            channel.on_data do |c, data|
+              stdout << data.chomp
+            end
+
+            channel.on_extended_data do |c, type, data|
+              stderr << data.chomp
+            end
+
+            channel.on_request("exit-status") do |c,data|
+              exit_code = data.read_long
+            end
+
+            channel.on_close do |c|
+            end
           end
-        rescue Exception => e
-          @ui.error  e.message
         end
-        #if errors != ""
-        #  @ui.error errors
-        #  raise Exception
-        #end
-        return stdout
+        @session.loop
+        if exit_code != 0
+          @logger.error(:stderr => stderr, :code => exit_code)
+          raise VagrantPlugins::G5K::Errors::CommandError
+        end
+        @logger.debug("Returning #{stdout}")
+        stdout
       end
 
       def upload(src, dst)

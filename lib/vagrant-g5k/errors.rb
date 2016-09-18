@@ -14,6 +14,12 @@ module VagrantPlugins
       class JobNotRunning < VagrantG5KError
         error_key("tired of waiting")
       end
+
+      class CommandError < VagrantG5KError
+        error_key("remote command error")
+      end
+
+
     end
   end
 end
