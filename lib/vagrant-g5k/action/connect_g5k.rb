@@ -15,7 +15,7 @@ module VagrantPlugins
 
         def call(env)
           args = {
-            :@logger => env[:ui]
+            :@ui => env[:ui]
           }
           a =  env[:machine].provider_config.instance_variables.map do |attr|
             [ attr, env[:machine].provider_config.instance_variable_get(attr)]

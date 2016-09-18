@@ -8,6 +8,7 @@ module VagrantPlugins
 
         def call(env)
           conn = env[:g5k_connection]
+          env[:ui].info("Deleting the associated disk")
           conn.delete_disk(env)
           @app.call(env)
         end

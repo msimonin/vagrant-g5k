@@ -40,20 +40,13 @@ module VagrantPlugins
 
       attr_accessor :backing_strategy
 
-      # legacy
-      @@locations = [
-        {
-          :path => "/grid5000/virt-images",
-          :type => "local"
-        }
-      ]
-
       def initialize(args)
         # initialize
         args.each do |k,v|
           instance_variable_set("#{k}", v) unless v.nil?
         end
-        @logger.info("connecting with #{@username} on site #{@site}")
+        @logger = Log4r::Logger.new("vagrant::environment")
+        @logger.debug("connecting with #{@username} on site #{@site}")
         options = {
           :forward_agent => true
         }
@@ -120,9 +113,8 @@ module VagrantPlugins
 
       def launch_vm(env)
         launcher_path = File.join(File.dirname(__FILE__), LAUNCHER_SCRIPT)
-        @logger.info("Launching the VM on Grid'5000")
+        @ui.info("Launching the VM on Grid'5000")
         # Checking the subnet job
-        @logger.info("Uploading launcher")
         # uploading the launcher
         launcher_remote_path = File.join(cwd(env), LAUNCHER_SCRIPT)
         upload(launcher_path, launcher_remote_path)
@@ -133,13 +125,12 @@ module VagrantPlugins
 
         args = [drive, net].join(" ")
         # Submitting a new job
-        @logger.info("Starting a new job")
         job_id = exec("oarsub -t allow_classic_ssh -l \"{virtual!=\'none\'}/nodes=1,walltime=#{@walltime}\" --name #{env[:machine].name} --checkpoint 60 --signal 12  \"#{launcher_remote_path} #{args}\" | grep OAR_JOB_ID | cut -d '='  -f2").chomp
         
 
         begin
           retryable(:on => VagrantPlugins::G5K::Errors::JobNotRunning, :tries => 100, :sleep => 2) do
-            @logger.info("Waiting for the job to be running")
+            @ui.info("Waiting for the job to be running")
             job = check_job(job_id)
             if job.nil? or job["state"] != "Running"
               raise VagrantPlugins::G5K::Errors::JobNotRunning 
@@ -149,16 +140,16 @@ module VagrantPlugins
             break
           end
         rescue VagrantPlugins::G5K::Errors::JobNotRunning
-          @logger.error("Tired of waiting")
+          @ui.error("Tired of waiting")
           raise VagrantPlugins::G5K::Errors::JobNotRunning
         end
-        @logger.info("VM booted on Grid'5000")
+        @ui.info("VM booted on Grid'5000")
 
       end
 
       def delete_disk(env)
         if [STRATEGY_DIRECT, STRATEGY_SNAPSHOT].include?(@image["backing"])
-          @logger.error("Destroy not support for the strategy #{@image["backing"]}")
+          @ui.error("Destroy not support for the strategy #{@image["backing"]}")
           return
         end
 
@@ -173,7 +164,7 @@ module VagrantPlugins
 
 
       def exec(cmd)
-        @logger.info("Executing #{cmd}")
+        @logger.debug("Executing #{cmd}")
         stdout = ""
         errors = ""
         begin
@@ -182,10 +173,10 @@ module VagrantPlugins
             errors << data.chomp if stream == :stderr
           end
         rescue Exception => e
-          @logger.error  e.message
+          @ui.error  e.message
         end
         #if errors != ""
-        #  @logger.error errors
+        #  @ui.error errors
         #  raise Exception
         #end
         return stdout
@@ -238,7 +229,7 @@ module VagrantPlugins
       end
 
       def _rbd_clone_or_copy_image(env, clone = true)
-        @logger.info("Clone the rbd image")
+        @ui.info("Clone the rbd image")
         # destination in the same pool under the .vagrant ns
         destination = File.join(@image["pool"], cwd(env), env[:machine].name.to_s)
         # Even if nothing will happen when the destination already exist, we should test it before
@@ -259,7 +250,7 @@ module VagrantPlugins
       end
       
       def _file_clone_or_copy_image(env, clone = true)
-          @logger.info("Clone the file image")
+          @ui.info("Clone the file image")
           file = File.join(cwd(env), env[:machine].name.to_s)
           exists = _check_file_local_storage(env)
           if exists == ""

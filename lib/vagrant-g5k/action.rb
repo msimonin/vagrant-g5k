@@ -99,6 +99,21 @@ module VagrantPlugins
         end
       end
 
+       # This action is called when `vagrant provision` is called.
+      def self.action_provision
+        Vagrant::Action::Builder.new.tap do |b|
+          b.use ConfigValidate
+          b.use Call, IsCreated do |env, b2|
+            if !env[:result]
+              b2.use MessageNotCreated
+              next
+            end
+            puts "provision"
+            b2.use Provision
+          end
+        end
+      end
+
       action_root = Pathname.new(File.expand_path("../action", __FILE__))
       autoload :ConnectG5K, action_root.join("connect_g5k")
       autoload :CreateLocalWorkingDir, action_root.join("create_local_working_dir")
