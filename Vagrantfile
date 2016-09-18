@@ -11,9 +11,9 @@ Vagrant.configure(2) do |config|
     end
 
     # user to log with inside the vm
-    config.ssh.username = "root"
+    # config.ssh.username = "root"
     # password to use to log inside the vm 
-    config.ssh.password = ""
+    # config.ssh.password = ""
 
     config.vm.provider "g5k" do |g5k|
       # user name used to connect to g5k
@@ -29,19 +29,29 @@ Vagrant.configure(2) do |config|
       # g5k.walltime = "02:00:00" 
 
       # image location 
-      g5k.image_location = "/grid5000/virt-images/alpine_docker.qcow2"
+      #g5k.image = {
+      #  "path" => "/grid5000/virt-images/alpine_docker.qcow2",
+      #  "backing" => "cow"
+      #}
 
       # it could be backed by the ceph
-      # g5k.image_location = "rbd:msimonin_rbds/virt/alpine_docker_analyse-090916:id=msimonin:conf=/home/msimonin/.ceph/config"
+      g5k.image = { 
+        "pool"     => "msimonin_rbds",
+        "rbd"      => "bases/boxcutter_ubuntu1404",
+        "snapshot" => "parent",
+        "id"       => "$USER",
+        "conf"     => "$HOME/.ceph/config",
+        "backing"  => "cow"
+      }
       
       # g5k.backing_strategy = "snapshot"
       #   this is a copy on write strategy 
       #   image_location is use to read, an epehemeral disk will hold the writes
       # if not specified this means that the image is used in r/w mode.
       #   changes will be persistent
-      g5k.backing_strategy = "snapshot"
+      g5k.backing_strategy = "cow"
       # ports to expose (at least ssh has to be forwarded)
-      g5k.ports = ['2222-:22']
+      g5k.ports = ['2222-:22','3000-:3000']
     end
 
 

@@ -14,15 +14,18 @@ module VagrantPlugins
         end
 
         def call(env)
+          args = {
+            :@logger => env[:ui]
+          }
+          a =  env[:machine].provider_config.instance_variables.map do |attr|
+            [ attr, env[:machine].provider_config.instance_variable_get(attr)]
+          end.to_h
+          args.merge!(a)
+          #.map do |attr|
+          #  {attr => env[:machine].provider_config.instance_variable_get(attr)}
+          #end
           env[:g5k_connection] = Connection.new(
-             :logger => env[:ui],
-             :username => env[:machine].provider_config.username,
-             :private_key => env[:machine].provider_config.private_key,
-             :walltime => env[:machine].provider_config.walltime,
-             :image_location => env[:machine].provider_config.image_location, 
-             :site => env[:machine].provider_config.site,
-             :ports => env[:machine].provider_config.ports,
-             :backing_strategy => env[:machine].provider_config.backing_strategy
+            args
           )
           @app.call(env)
         end

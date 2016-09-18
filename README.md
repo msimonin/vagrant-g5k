@@ -26,8 +26,25 @@ $ vagrant up --provider=g5k
 
 Check the Vagrantfile.
 
+## Note on disk format and backing strategy
+
+Virtual Machines can be booted either : 
+
+* From a `qcow2` image stored in the frontend filesystem
+* From a rbd image stored in one of the ceph cluster of Grid'5000.
+
+Once the base image is chosen, you can pick one of the following strategy 
+to back the disk image of the virtual machines : 
+
+* `copy`: will make a full copy of the image in your home directory (resp. in the same pool)
+* `cow`: will create a Copy On write image on your home directory (resp. in the same pool)
+* `direct`: will use the image directly (you'll r/w access to the image)
+* `snapshot`: will let `kvm` create an ephemeral copy on write image.
+
 ## Supported operations
 
-* `vagrant up`
-* `vagrant ssh`
 * `vagrant destroy`
+* `vagrant halt`
+* `vagrant ssh`
+* `vagrant status`
+* `vagrant up`

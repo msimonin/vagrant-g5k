@@ -9,7 +9,8 @@ module VagrantPlugins
         end
 
         def call(env)
-          env[:result] = env[:machine].state.id != :not_created
+          state_id = env[:machine].state.id
+          env[:result] = state_id == :Running and state_id == :shutdown
           @app.call(env)
         end
       end

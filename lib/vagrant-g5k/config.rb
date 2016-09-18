@@ -23,10 +23,12 @@ module VagrantPlugins
       #
       # @return [String]
       attr_accessor :site
-      # G5K image location (path)
+
+      # G5K image
       #
-      # @return [String]
-      attr_accessor :image_location
+      # @return [Hash]
+      attr_accessor :image
+
 
       # G5K ports mapping
       # 
@@ -42,7 +44,6 @@ module VagrantPlugins
 
       def initialize()
         @username     = nil
-        @image_location = nil
         @site = "rennes"
         @backing_strategy = ""
         @walltime = "01:00:00"
@@ -57,8 +58,8 @@ module VagrantPlugins
         errors = _detected_errors
 
         errors << "g5k username is required" if @username.nil?
-        errors << "g5k image_location is required" if @image_location.nil?
-
+        errors << "g5k image_location is required" if @image.nil?
+        # TODO validate image hash
         { "G5K Provider" => errors }
       end
 

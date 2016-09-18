@@ -12,19 +12,33 @@ module VagrantPlugins
         end
 
         def call(env)
-          env[:machine_state_id] = read_state(env[:machine], env[:g5k_connection])
+          env[:machine_state_id] = read_state(env)
           @app.call(env)
         end
 
-        def read_state(machine, conn)
-          return :not_created if machine.id.nil?
-          # is there a job running for this vm ?
-          job = conn.check_job(machine.id)
-          if job.nil? # TODO or fraged
+        def read_state(env)
+          machine = env[:machine]
+          conn = env[:g5k_connection]
+          id = machine.id
+          local_storage = conn.check_local_storage(env)
+          if id.nil? and local_storage.nil?
             return :not_created
           end
 
-          return job["state"].to_sym
+          if id.nil? and not local_storage.nil?
+            return :shutdown
+          end
+         
+          if not id.nil?
+            # is there a job running for this vm ?
+            job = conn.check_job(id)
+            if job.nil?
+              return :not_created
+            end
+            return job["state"].to_sym
+          end
+
+            return :guru_meditation
         end
       end
     end
