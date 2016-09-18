@@ -36,9 +36,9 @@ Virtual Machines can be booted either :
 Once the base image is chosen, you can pick one of the following strategy 
 to back the disk image of the virtual machines : 
 
-* `copy`: will make a full copy of the image in your home directory (resp. in the same pool)
-* `cow`: will create a Copy On write image on your home directory (resp. in the same pool)
-* `direct`: will use the image directly (you'll r/w access to the image)
+* `copy`: will make a full copy of the image in your home directory (resp. in the same pool as the rbd)
+* `cow`: will create a Copy On write image in your home directory (resp. in the same pool as the rbd)
+* `direct`: will use the image directly (you'll need r/w access to the image)
 * `snapshot`: will let `kvm` create an ephemeral copy on write image.
 
 ## Supported operations
