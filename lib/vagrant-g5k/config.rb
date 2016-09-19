@@ -58,7 +58,7 @@ module VagrantPlugins
 
         errors << "g5k username is required" if @username.nil?
         errors << "g5k image is required" if @image.nil?
-        errors << "g5k image is required" if @project_id.nil?
+        errors << "g5k project_id is required" if @project_id.nil?
 
         # TODO validate image hash
         { "G5K Provider" => errors }
