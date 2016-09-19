@@ -14,6 +14,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :private_key
 
+      # G5K project_id
+      #
+      # @return [String]
+      attr_accessor :project_id
+
       # G5K walltime
       #
       # @return [String]
@@ -43,10 +48,11 @@ module VagrantPlugins
       attr_accessor :backing_strategy
 
       def initialize()
-        @username     = nil
-        @site = "rennes"
+        @username         = nil
+        @project_id       = nil
+        @site             = "rennes"
         @backing_strategy = ""
-        @walltime = "01:00:00"
+        @walltime         = "01:00:00"
       end
 
       def finalize!()
@@ -58,7 +64,9 @@ module VagrantPlugins
         errors = _detected_errors
 
         errors << "g5k username is required" if @username.nil?
-        errors << "g5k image_location is required" if @image.nil?
+        errors << "g5k image is required" if @image.nil?
+        errors << "g5k image is required" if @project_id.nil?
+
         # TODO validate image hash
         { "G5K Provider" => errors }
       end

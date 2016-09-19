@@ -6,7 +6,6 @@ require 'digest'
 require 'vagrant/util/retryable'
 
 LAUNCHER_SCRIPT = "launch_vm_fwd.sh"
-JOB_SUBNET_NAME = "vagrant-g5k-subnet"
 
 STRATEGY_SNAPSHOT = "snapshot"
 STRATEGY_COPY = "copy"
@@ -21,6 +20,8 @@ module VagrantPlugins
       attr_accessor :session
 
       attr_accessor :username
+
+      attr_accessor :project_id
 
       attr_accessor :private_key
 
@@ -61,7 +62,7 @@ module VagrantPlugins
 
       def cwd(env)
         # remote working directory
-        File.join("/home", @username, ".vagrant", Digest::MD5.hexdigest(env[:root_path].to_s))
+        File.join("/home", @username, ".vagrant", @project_id)
       end
 
 

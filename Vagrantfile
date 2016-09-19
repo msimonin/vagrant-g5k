@@ -9,15 +9,21 @@ Vagrant.configure(2) do |config|
     config.vm.define "vm" do |my|
       my.vm.box = "dummy"
       
-      my.vm.provision "shell", inline: "echo hello"
+      # make sure the insecure-key of vagrant is authorized
+      my.vm.provision "shell", inline: "echo hello", privileged: false
     end
 
     # user to log with inside the vm
-    # config.ssh.username = "root"
+    config.ssh.username = "root"
     # password to use to log inside the vm 
     # config.ssh.password = ""
     
     config.vm.provider "g5k" do |g5k|
+      # The project id. 
+      # It is used to generate uniq remote storage for images
+      # It must be uniq accros all project managed by vagrant.
+      g5k.project_id = "vagrant-g5k"
+
       # user name used to connect to g5k
       g5k.username = ENV['USER']
 
@@ -39,11 +45,11 @@ Vagrant.configure(2) do |config|
       # it could be backed by the ceph
       g5k.image = { 
         "pool"     => "msimonin_rbds",
-        "rbd"      => "bases/boxcutter_ubuntu1404",
+        "rbd"      => "bases/alpine_docker",
         "snapshot" => "parent",
         "id"       => "$USER",
         "conf"     => "$HOME/.ceph/config",
-        "backing"  => "cow"
+        "backing"  => "copy"
       }
       
       # g5k.backing_strategy = "snapshot"
