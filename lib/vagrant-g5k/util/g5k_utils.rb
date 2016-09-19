@@ -29,8 +29,6 @@ module VagrantPlugins
 
       attr_accessor :walltime
 
-      attr_accessor :image_location
-
       attr_accessor :logger
 
       attr_accessor :node
