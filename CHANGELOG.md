@@ -1,3 +1,12 @@
+# 0.0.11
+
+  current
+
+# 0.0.10
+
+  * Support different backing strategies (copy, cow, direct, snapshot)
+  * Add a mandatory project_id in the configuration
+
 # 0.0.9
 
   * Add support for custom walltime
