@@ -39,8 +39,6 @@ module VagrantPlugins
 
       attr_accessor :ports
 
-      attr_accessor :backing_strategy
-
       def initialize(args)
         # initialize
         args.each do |k,v|

@@ -16,7 +16,7 @@ Vagrant.configure(2) do |config|
     # user to log with inside the vm
     config.ssh.username = "root"
     # password to use to log inside the vm 
-    # config.ssh.password = ""
+    config.ssh.password = ""
     
     config.vm.provider "g5k" do |g5k|
       # The project id. 
@@ -49,15 +49,9 @@ Vagrant.configure(2) do |config|
         "snapshot" => "parent",
         "id"       => "$USER",
         "conf"     => "$HOME/.ceph/config",
-        "backing"  => "copy"
+        "backing"  => "cow"
       }
       
-      # g5k.backing_strategy = "snapshot"
-      #   this is a copy on write strategy 
-      #   image_location is use to read, an epehemeral disk will hold the writes
-      # if not specified this means that the image is used in r/w mode.
-      #   changes will be persistent
-      g5k.backing_strategy = "cow"
       # ports to expose (at least ssh has to be forwarded)
       g5k.ports = ['2222-:22','3000-:3000']
     end

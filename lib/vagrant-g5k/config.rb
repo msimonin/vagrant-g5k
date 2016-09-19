@@ -41,17 +41,10 @@ module VagrantPlugins
       # @return [Array]
       attr_accessor :ports
 
-      # G5K backing strategy
-      # 
-      #
-      # @return [String]
-      attr_accessor :backing_strategy
-
       def initialize()
         @username         = nil
         @project_id       = nil
         @site             = "rennes"
-        @backing_strategy = ""
         @walltime         = "01:00:00"
       end
 
