@@ -25,7 +25,8 @@ Vagrant.configure(2) do |config|
       g5k.project_id = "vagrant-g5k"
 
       # user name used to connect to g5k
-      g5k.username = ENV['USER']
+      # default to ENV["USER"]
+      # g5k.username = "john"
 
       # private key 
       # g5k.private_key = File.join(ENV['HOME'], ".ssh/id_rsa_discovery")
