@@ -108,7 +108,6 @@ module VagrantPlugins
               b2.use MessageNotCreated
               next
             end
-            puts "provision"
             b2.use Provision
           end
         end

@@ -8,9 +8,7 @@ Vagrant.configure(2) do |config|
     # box isn't used
     config.vm.define "vm" do |my|
       my.vm.box = "dummy"
-      
-      # make sure the insecure-key of vagrant is authorized
-      my.vm.provision "shell", inline: "echo hello", privileged: false
+      my.vm.provision "ansible", :playbook => "playbook.yml"
     end
 
     # user to log with inside the vm
@@ -32,29 +30,29 @@ Vagrant.configure(2) do |config|
       # g5k.private_key = File.join(ENV['HOME'], ".ssh/id_rsa_discovery")
 
       # site to use
-      g5k.site = "rennes"
+      g5k.site = "nantes"
 
       # walltime to use
       # g5k.walltime = "02:00:00" 
 
       # image location 
-      #g5k.image = {
-      #  "path" => "/grid5000/virt-images/alpine_docker.qcow2",
-      #  "backing" => "cow"
-      #}
+      g5k.image = {
+        "path" => "/home/msimonin/public/alpine_docker_analyse_090916.qcow2",
+        "backing" => "snapshot"
+      }
 
       # it could be backed by the ceph
-      g5k.image = { 
-        "pool"     => "msimonin_rbds",
-        "rbd"      => "bases/alpine_docker",
-        "snapshot" => "parent",
-        "id"       => "$USER",
-        "conf"     => "$HOME/.ceph/config",
-        "backing"  => "cow"
-      }
-      
+      # g5k.image = { 
+      #   "pool"     => "msimonin_rbds",
+      #   "rbd"      => "bases/alpine_docker",
+      #   "snapshot" => "parent",
+      #   "id"       => "$USER",
+      #   "conf"     => "$HOME/.ceph/config",
+      #   "backing"  => "cow"
+      # }
+
       # ports to expose (at least ssh has to be forwarded)
-      g5k.ports = ['2222-:22','3000-:3000']
+      g5k.ports = ['2222-:22']
     end
 
 

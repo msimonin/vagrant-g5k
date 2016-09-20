@@ -42,9 +42,9 @@ module VagrantPlugins
       attr_accessor :ports
 
       def initialize()
-        @username         = nil
+        @username         = ENV['USER']
         @project_id       = nil
-        @site             = "rennes"
+        @site             = nil
         @walltime         = "01:00:00"
       end
 
@@ -56,11 +56,11 @@ module VagrantPlugins
       def validate(machine)
         errors = _detected_errors
 
-        errors << "g5k username is required" if @username.nil?
-        errors << "g5k image is required" if @image.nil?
         errors << "g5k project_id is required" if @project_id.nil?
-
-        # TODO validate image hash
+        errors << "g5k site is required" if @site.nil?
+        errors << "g5k image is required" if @image.nil?
+        errors << "g5k image must be a Hash" if !@image.is_a?(Hash)
+        
         { "G5K Provider" => errors }
       end
 
