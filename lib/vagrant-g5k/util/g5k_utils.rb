@@ -29,8 +29,6 @@ module VagrantPlugins
 
       attr_accessor :walltime
 
-      attr_accessor :image_location
-
       attr_accessor :logger
 
       attr_accessor :node
@@ -38,8 +36,6 @@ module VagrantPlugins
       attr_accessor :pool
 
       attr_accessor :ports
-
-      attr_accessor :backing_strategy
 
       def initialize(args)
         # initialize
@@ -93,7 +89,7 @@ module VagrantPlugins
         strategy = @image["backing"]
         file_to_check = ""
         if [STRATEGY_SNAPSHOT, STRATEGY_DIRECT].include?(strategy)
-          file_to_check = @image[path]
+          file_to_check = @image["path"]
         else
           file_to_check = File.join(cwd(env), env[:machine].name.to_s)
         end
@@ -253,7 +249,6 @@ module VagrantPlugins
       end
 
       def _rbd_clone_or_copy_image(env, clone = true)
-        @ui.info("Clone the rbd image")
         # destination in the same pool under the .vagrant ns
         destination = File.join(@image["pool"], cwd(env), env[:machine].name.to_s)
         # Even if nothing will happen when the destination already exist, we should test it before
@@ -262,9 +257,11 @@ module VagrantPlugins
           # we create the destination
           if clone
             # parent = pool/rbd@snap
+            @ui.info("Cloning the rbd image")
             parent = File.join(@image["pool"], "#{@image["rbd"]}@#{@image["snapshot"]}")
             exec("rbd clone #{parent} #{destination} --conf #{@image["conf"]} --id #{@image["id"]}" )
           else
+            @ui.info("Copying the rbd image (This may take some time)")
             # parent = pool/rbd@snap
             parent = File.join(@image["pool"], "#{@image["rbd"]}")
             exec("rbd cp #{parent} #{destination} --conf #{@image["conf"]} --id #{@image["id"]}" )

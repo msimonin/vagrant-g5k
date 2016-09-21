@@ -5,11 +5,6 @@ Grid5000.
 
 **NOTE:** This plugin requires Vagrant 1.2+,
 
-## Features
-
-* Boot one vm instance
-* SSH into the instances.
-
 ## Usage
 
 Install using standard Vagrant 1.1+ plugin installation methods. After

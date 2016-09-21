@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# This script is borrowed from pmorrillon.
+# Thanks to him !
+
 #OAR -l slash_22=1+{virtual!='none'}/nodes=1,walltime=06:00:00
 #OAR --checkpoint 60
 #OAR --signal 12
@@ -35,7 +39,6 @@ clean_shutdown() {
 trap clean_shutdown 12
 
 # Launch virtual machine
-#kvm -m $VM_MEM -smp $SMP -drive file=/grid5000/images/KVM/alpine_docker.qcow2,if=virtio -snapshot -fsdev local,security_model=none,id=fsdev0,path=$HOME -device virtio-9p-pci,id=fs0,fsdev=fsdev0,mount_tag=hostshare -nographic -net nic,model=virtio,macaddr=$MAC_ADDR -net tap,ifname=$TAP,script=no -monitor unix:/tmp/alpine_docker_vm.mon,server,nowait -localtime -enable-kvm &
 #kvm -m $VM_MEM -smp $SMP -drive file=$IMAGE,if=virtio -snapshot -fsdev local,security_model=none,id=fsdev0,path=$HOME -device virtio-9p-pci,id=fs0,fsdev=fsdev0,mount_tag=hostshare -nographic -net nic,model=virtio,macaddr=$MAC_ADDR -net tap,ifname=$TAP,script=no -monitor unix:/tmp/vagrant-g5k.mon,server,nowait -localtime -enable-kvm &
 kvm -m $VM_MEM -smp $SMP -fsdev local,security_model=none,id=fsdev0,path=$HOME -device virtio-9p-pci,id=fs0,fsdev=fsdev0,mount_tag=hostshare -nographic -monitor unix:/tmp/vagrant-g5k.mon,server,nowait -localtime -enable-kvm $@ &
 
