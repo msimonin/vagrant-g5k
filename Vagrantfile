@@ -30,14 +30,14 @@ Vagrant.configure(2) do |config|
       # g5k.private_key = File.join(ENV['HOME'], ".ssh/id_rsa_discovery")
 
       # site to use
-      g5k.site = "nantes"
+      g5k.site = "rennes"
 
       # walltime to use
       # g5k.walltime = "02:00:00" 
 
       # image location 
       g5k.image = {
-        "path" => "/home/msimonin/public/alpine_docker_analyse_090916.qcow2",
+        "path" => "/grid5000/virt-images/alpine_docker.qcow2",
         "backing" => "snapshot"
       }
 
