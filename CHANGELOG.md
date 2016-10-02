@@ -1,3 +1,7 @@
+# 0.0.12
+
+  * Current
+
 # 0.0.11
 
   * Support for other "OAR behind ssh scheduler" (e.g Igrida)
