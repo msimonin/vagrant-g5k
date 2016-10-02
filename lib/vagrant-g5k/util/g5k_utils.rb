@@ -21,6 +21,8 @@ module VagrantPlugins
 
       attr_accessor :username
 
+      attr_accessor :gateway
+
       attr_accessor :project_id
 
       attr_accessor :private_key
@@ -37,19 +39,43 @@ module VagrantPlugins
 
       attr_accessor :ports
 
-      def initialize(args)
-        # initialize
-        args.each do |k,v|
-          instance_variable_set("#{k}", v) unless v.nil?
-        end
+      @@instance = nil
+
+      def self.instance
+        @@instance
+      end
+
+
+      def initialize(env)
+        # provider specific config
+        @provider_config = env[:machine].provider_config 
+        @username = @provider_config.username
+        @project_id = @provider_config.project_id
+        @private_key = @provider_config.private_key
+        @site = @provider_config.site
+        @walltime = @provider_config.walltime
+        @ports = @provider_config.ports
+        @image= @provider_config.image
+        @gateway = @provider_config.gateway
+        # grab the network config of the vm
+        @networks = env[:machine].config.vm.networks
+        # to log to the ui
+        @ui = env[:ui]
+
         @logger = Log4r::Logger.new("vagrant::environment")
-        @logger.debug("connecting with #{@username} on site #{@site}")
         options = {
           :forward_agent => true
         }
         options[:keys] = [@private_key] if !@private_key.nil?
-        gateway = Net::SSH::Gateway.new("access.grid5000.fr", @username, options)
-        @session = gateway.ssh(@site, @username, options)
+        if @gateway.nil?
+          @logger.debug("connecting with #{@username} on site #{@site}")
+          @session = Net::SSH.start(@site, @username, options)
+        else
+          @logger.debug("connecting with #{@username} on site #{@site} through #{@gateway}")
+          gateway = Net::SSH::Gateway.new(@gateway, @username, options)
+          @session = gateway.ssh(@site, @username, options)
+        end
+        @@instance = self
       end
 
       def create_local_working_dir(env)
@@ -58,14 +84,16 @@ module VagrantPlugins
 
       def cwd(env)
         # remote working directory
-        File.join("/home", @username, ".vagrant", @project_id)
+        File.join(".vagrant", @project_id)
       end
 
 
       def check_job(job_id)
         oarstat = exec("oarstat --json")
         oarstat = JSON.load(oarstat)
+        @logger.debug("Looking for the job id #{job_id} and username #{@username}")
         r = oarstat.select!{ |k,v| k == job_id and v["owner"] == @username }.values.first
+        @logger.debug(r.inspect)
         # update the assigned hostname
         # this will be used to reach the vm 
         if !r.nil?
@@ -100,17 +128,17 @@ module VagrantPlugins
         strategy = @image["backing"]
         file_to_check = ""
         if [STRATEGY_SNAPSHOT, STRATEGY_DIRECT].include?(strategy)
-          file_to_check = @image[path]
+          file_to_check = @image["rbd"]
         else
-          file_to_check = File.join(cwd(env), env[:machine].name.to_s)[1..-1]
+          file_to_check = File.join(cwd(env), env[:machine].name.to_s)
         end
-        exec("(rbd --pool #{@image["pool"]} --id #{@image["id"]} --conf #{@image["conf"]} ls | grep #{file_to_check}) || echo \"\"")
+        exec("(rbd --pool #{@image["pool"]} --id #{@image["id"]} --conf #{@image["conf"]} ls | grep \"^#{file_to_check}\") || echo \"\"")
       end
 
 
       def launch_vm(env)
         launcher_path = File.join(File.dirname(__FILE__), LAUNCHER_SCRIPT)
-        @ui.info("Launching the VM on Grid'5000")
+        @ui.info("Launching the VM on #{@site}")
         # Checking the subnet job
         # uploading the launcher
         launcher_remote_path = File.join(cwd(env), LAUNCHER_SCRIPT)
@@ -122,8 +150,8 @@ module VagrantPlugins
 
         args = [drive, net].join(" ")
         # Submitting a new job
-        job_id = exec("oarsub -t allow_classic_ssh -l \"{virtual!=\'none\'}/nodes=1,walltime=#{@walltime}\" --name #{env[:machine].name} --checkpoint 60 --signal 12  \"#{launcher_remote_path} #{args}\" | grep OAR_JOB_ID | cut -d '='  -f2").chomp
-        
+        # Getting the job_id as a ruby string
+        job_id = exec("oarsub --json -t allow_classic_ssh -l \"nodes=1,walltime=#{@walltime}\" --name #{env[:machine].name} --checkpoint 60 --signal 12  \"#{launcher_remote_path} #{args}\" | grep \"job_id\"| cut -d':' -f2").gsub(/"/,"").strip
 
         begin
           retryable(:on => VagrantPlugins::G5K::Errors::JobNotRunning, :tries => 100, :sleep => 2) do
@@ -140,7 +168,7 @@ module VagrantPlugins
           @ui.error("Tired of waiting")
           raise VagrantPlugins::G5K::Errors::JobNotRunning
         end
-        @ui.info("VM booted on Grid'5000")
+        @ui.info("VM booted on #{@site}")
 
       end
 
@@ -152,7 +180,7 @@ module VagrantPlugins
 
         if @image["pool"].nil?
           disk = File.join(cwd(env), env[:machine].name.to_s)
-          exec("rm #{disk}")
+          exec("rm -f #{disk}")
         else
           disk = File.join(@image["pool"], cwd(env), env[:machine].name.to_s)
           begin
@@ -166,6 +194,12 @@ module VagrantPlugins
           end
         end
       end
+
+      def close()
+        # Terminate the session
+        @session.close
+      end
+
 
 
       def exec(cmd)
@@ -227,12 +261,15 @@ module VagrantPlugins
       def _generate_drive_rbd(env)
         strategy = @image["backing"]
         if [STRATEGY_SNAPSHOT, STRATEGY_DIRECT].include?(strategy)
-          file = @image["path"]
+          file = File.join(@image["pool"], @image["rbd"])
         elsif strategy == STRATEGY_COW
           file = _rbd_clone_or_copy_image(env, clone = true)
         elsif strategy == STRATEGY_COPY
           file = _rbd_clone_or_copy_image(env, clone = false)
         end
+        # encapsulate the file to a qemu ready disk description
+        file = "rbd:#{file}:id=#{@image["id"]}:conf=#{@image["conf"]}"
+        @logger.debug("Generated drive string : #{file}")
         return file
       end
 
@@ -251,7 +288,7 @@ module VagrantPlugins
       def _rbd_clone_or_copy_image(env, clone = true)
         # destination in the same pool under the .vagrant ns
         destination = File.join(@image["pool"], cwd(env), env[:machine].name.to_s)
-        # Even if nothing will happen when the destination already exist, we should test it before
+        # Even if nothing bad will happen when the destination already exist, we should test it before
         exists = _check_rbd_local_storage(env)
         if exists == ""
           # we create the destination
@@ -267,7 +304,7 @@ module VagrantPlugins
             exec("rbd cp #{parent} #{destination} --conf #{@image["conf"]} --id #{@image["id"]}" )
           end
         end
-        return "rbd:#{destination}:id=#{@image["id"]}:conf=#{@image["conf"]}"
+        return destination
       end
       
       def _file_clone_or_copy_image(env, clone = true)
@@ -289,6 +326,7 @@ module VagrantPlugins
           "hostfwd=tcp::#{p}"
         end.join(',')
         net = "-net nic,model=virtio -net user,#{fwd_ports}"
+        @logger.info("Mapping ports")
         return net
       end
     end

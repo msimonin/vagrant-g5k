@@ -34,7 +34,7 @@ module VagrantPlugins
         Provider
       end
 
-      command(:vmlist) do
+      command(:g5k) do
         require_relative 'command'
         Command
       end

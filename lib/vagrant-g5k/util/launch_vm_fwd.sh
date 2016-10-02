@@ -9,18 +9,6 @@
 
 # Directory for qcow2 snapshots
 export TMPDIR=/tmp
-#IMAGE=/grid5000/virt-images/alpine-docker.qcow2
-
-# GET Virtual IP information
-IP_ADDR=$(/usr/local/bin/g5k-subnets -im | head -1 | awk '{print $1}')
-MAC_ADDR=$(/usr/local/bin/g5k-subnets -im | head -1 | awk '{print $2}')
-
-echo "VM IP informations :"
-echo "IP address: $IP_ADDR"
-echo "MAC address: $MAC_ADDR"
-
-# Create tap
-TAP=$(sudo create_tap)
 
 # Memory allocation
 KEEP_SYSTEM_MEM=1 # Gb

@@ -1,6 +1,7 @@
 # 0.0.11
 
-  current
+  * Support for other "OAR behind ssh scheduler" (e.g Igrida)
+  * Reuse already opened ssh connection
 
 # 0.0.10
 

@@ -37,14 +37,17 @@ module VagrantPlugins
           return nil if machine.id.nil?
 
           if ssh_fwd.nil? 
-
             raise Error "ssh_port should be forwarded"
           end
+          
           ssh_info = {
                    :host          => conn.node,
                    :port          => ssh_fwd,
-                   :proxy_command => "ssh #{conn.username}@access.grid5000.fr #{ssh_key(conn)} nc %h %p",
           }
+
+          if !conn.gateway.nil?
+            ssh_info[:proxy_command] = "ssh #{conn.username}@#{conn.gateway} #{ssh_key(conn)} nc %h %p"
+          end
           ssh_info[:private_key_path] = [conn.private_key] if ! conn.private_key.nil?
           return ssh_info
         end

@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 #
 # Testing purpose only
-Vagrant.require_plugin "vagrant-g5k"
+#Vagrant.require_plugin "vagrant-g5k"
 
 Vagrant.configure(2) do |config|
     # box isn't used
@@ -26,30 +26,35 @@ Vagrant.configure(2) do |config|
       # default to ENV["USER"]
       # g5k.username = "john"
 
-      # private key 
+      # private key to use
       # g5k.private_key = File.join(ENV['HOME'], ".ssh/id_rsa_discovery")
 
       # site to use
+      # g5k.site = "igrida-oar-frontend"
       g5k.site = "rennes"
+
+      # gateway to use (if needed)
+      g5k.gateway = "access.grid5000.fr" 
+      # g5k.gateway = "transit.irisa.fr"
 
       # walltime to use
       # g5k.walltime = "02:00:00" 
 
       # image location 
-      g5k.image = {
-        "path" => "/grid5000/virt-images/alpine_docker.qcow2",
-        "backing" => "snapshot"
-      }
+      #g5k.image = {
+      #  "path" => "/udd/msimonin/precise.qcow2",
+      #  "backing" => "copy"
+      #}
 
       # it could be backed by the ceph
-      # g5k.image = { 
-      #   "pool"     => "msimonin_rbds",
-      #   "rbd"      => "bases/alpine_docker",
-      #   "snapshot" => "parent",
-      #   "id"       => "$USER",
-      #   "conf"     => "$HOME/.ceph/config",
-      #   "backing"  => "cow"
-      # }
+      g5k.image = { 
+         "pool"     => "msimonin_rbds",
+         "rbd"      => "bases/alpine_docker",
+         "snapshot" => "parent",
+         "id"       => "$USER",
+         "conf"     => "$HOME/.ceph/config",
+         "backing"  => "snapshot"
+       }
 
       # ports to expose (at least ssh has to be forwarded)
       g5k.ports = ['2222-:22']

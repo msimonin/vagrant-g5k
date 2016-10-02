@@ -29,6 +29,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :site
 
+      # G5K gateway
+      #
+      # @return [String]
+      attr_accessor :gateway
+
       # G5K image
       #
       # @return [Hash]
@@ -45,6 +50,7 @@ module VagrantPlugins
         @username         = ENV['USER']
         @project_id       = nil
         @site             = nil
+        @gateway          = nil
         @walltime         = "01:00:00"
       end
 

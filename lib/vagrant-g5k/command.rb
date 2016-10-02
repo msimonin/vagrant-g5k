@@ -1,5 +1,6 @@
 require 'net/ssh/multi'
 require 'vagrant-g5k/util/g5k_utils'
+include Process
 
 module VagrantPlugins
   module G5K
@@ -12,8 +13,20 @@ module VagrantPlugins
 
       def execute
         # TODO
+        options = {}
+        opts = OptionParser.new do |o|
+          o.banner = 'Usage: vagrant g(k [vm-name]'
+          o.separator ''
+          o.version = VagrantPlugins::G5K::VERSION
+          o.program_name = 'vagrant g5k'
+        end
+        argv = parse_options(opts)
+        with_target_vms(argv, options) do |machine|
+          puts machine.config.vm.networks
+        end
+        puts "sleeping"
+        wait
       end
-
     end
   end
 end

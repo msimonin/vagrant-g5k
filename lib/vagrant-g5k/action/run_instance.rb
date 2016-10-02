@@ -24,10 +24,14 @@ module VagrantPlugins
         def recover(env)
           return if env["vagrant.error"].is_a?(Vagrant::Errors::VagrantError)
 
-          if env[:machine].provider.state.id != :not_created
+          if ![:not_created, :shutdown].include?(env[:machine].provider.state.id)
             # Undo the import
             terminate(env)
           end
+        end
+
+        def terminate(env)
+         @logger.info("Terminate the machine")
         end
 
       end

@@ -14,19 +14,16 @@ module VagrantPlugins
         end
 
         def call(env)
-          args = {
-            :@ui => env[:ui]
-          }
-          a =  env[:machine].provider_config.instance_variables.map do |attr|
-            [ attr, env[:machine].provider_config.instance_variable_get(attr)]
-          end.to_h
-          args.merge!(a)
-          #.map do |attr|
-          #  {attr => env[:machine].provider_config.instance_variable_get(attr)}
-          #end
-          env[:g5k_connection] = Connection.new(
-            args
-          )
+          # This is a hack to make the connection persistent
+          # even after environment unload is called
+          if Connection.instance.nil?
+            @logger.debug("Creating new connection")
+            env[:g5k_connection] = Connection.new(env)
+          else
+            @logger.debug("Reusing connection")
+            env[:g5k_connection] = Connection.instance
+          end
+
           @app.call(env)
         end
       end
