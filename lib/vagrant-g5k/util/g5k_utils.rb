@@ -102,6 +102,12 @@ module VagrantPlugins
         return r
       end
 
+      def delete_job(job_id)
+        @ui.info("Deleting the associated job")
+        exec("oardel -c -s 12 #{job_id}")
+      end
+
+
       def check_local_storage(env)
         # Is the disk image already here ?
         if @image["pool"].nil?

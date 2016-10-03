@@ -9,8 +9,7 @@ module VagrantPlugins
         def call(env)
           job_id = env[:machine].id
           conn = env[:g5k_connection]
-          env[:ui].info("Deleting the associated job")
-          conn.exec("oardel #{job_id}")
+          conn.delete_job(job_id)
           @app.call(env)
         end
       end

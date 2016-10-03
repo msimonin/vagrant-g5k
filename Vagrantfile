@@ -8,7 +8,6 @@ Vagrant.configure(2) do |config|
     # box isn't used
     config.vm.define "vm" do |my|
       my.vm.box = "dummy"
-      my.vm.provision "ansible", :playbook => "playbook.yml"
     end
 
     # user to log with inside the vm
