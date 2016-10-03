@@ -1,6 +1,10 @@
+# 0.0.14
+
+  * current
+
 # 0.0.13
 
-  * Current
+  * Let vagrant configure the private_key to use to connect to the VM
 
 # 0.0.12
 
