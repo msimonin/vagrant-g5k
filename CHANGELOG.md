@@ -1,3 +1,7 @@
+# 0.0.13
+
+  * Current
+
 # 0.0.12
 
   * Send checkpoint signal to the VM when deleting the job
