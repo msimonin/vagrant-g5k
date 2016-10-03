@@ -48,7 +48,6 @@ module VagrantPlugins
           if !conn.gateway.nil?
             ssh_info[:proxy_command] = "ssh #{conn.username}@#{conn.gateway} #{ssh_key(conn)} nc %h %p"
           end
-          ssh_info[:private_key_path] = [conn.private_key] if ! conn.private_key.nil?
           return ssh_info
         end
       end
