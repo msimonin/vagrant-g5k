@@ -46,12 +46,19 @@ module VagrantPlugins
       # @return [Array]
       attr_accessor :ports
 
+      # OAR resource selection
+      # 
+      #
+      # @return [String]
+      attr_accessor :oar
+
       def initialize()
         @username         = ENV['USER']
         @project_id       = nil
         @site             = nil
         @gateway          = nil
         @walltime         = "01:00:00"
+        @oar              = ""
       end
 
       def finalize!()

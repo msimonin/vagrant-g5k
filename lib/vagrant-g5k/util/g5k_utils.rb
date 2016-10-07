@@ -39,6 +39,8 @@ module VagrantPlugins
 
       attr_accessor :ports
 
+      attr_accessor :oar
+
       @@instance = nil
 
       def self.instance
@@ -57,6 +59,7 @@ module VagrantPlugins
         @ports = @provider_config.ports
         @image= @provider_config.image
         @gateway = @provider_config.gateway
+        @oar = "{#{@provider_config.oar}}/" if @provider_config.oar != ""
         # grab the network config of the vm
         @networks = env[:machine].config.vm.networks
         # to log to the ui
@@ -157,7 +160,7 @@ module VagrantPlugins
         args = [drive, net].join(" ")
         # Submitting a new job
         # Getting the job_id as a ruby string
-        job_id = exec("oarsub --json -t allow_classic_ssh -l \"nodes=1,walltime=#{@walltime}\" --name #{env[:machine].name} --checkpoint 60 --signal 12  \"#{launcher_remote_path} #{args}\" | grep \"job_id\"| cut -d':' -f2").gsub(/"/,"").strip
+        job_id = exec("oarsub --json -t allow_classic_ssh -l \"#{@oar}nodes=1,walltime=#{@walltime}\" --name #{env[:machine].name} --checkpoint 60 --signal 12  \"#{launcher_remote_path} #{args}\" | grep \"job_id\"| cut -d':' -f2").gsub(/"/,"").strip
 
         begin
           retryable(:on => VagrantPlugins::G5K::Errors::JobNotRunning, :tries => 100, :sleep => 2) do
@@ -174,7 +177,7 @@ module VagrantPlugins
           @ui.error("Tired of waiting")
           raise VagrantPlugins::G5K::Errors::JobNotRunning
         end
-        @ui.info("VM booted on #{@site}")
+        @ui.info("VM booted @#{@site} on #{@node}")
 
       end
 

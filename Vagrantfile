@@ -57,6 +57,11 @@ Vagrant.configure(2) do |config|
 
       # ports to expose (at least ssh has to be forwarded)
       g5k.ports = ['2222-:22']
+
+      # Custom oar ressource filtering
+      # This may be specific on the oar ressource declaration 
+      # of the used platform
+      # g5k.oar = "virtual != 'none'"
     end
 
 
