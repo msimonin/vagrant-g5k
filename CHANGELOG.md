@@ -1,6 +1,7 @@
 # 0.0.14
 
-  * current
+  * Add custom oar properties
+  * Display the name of the node
 
 # 0.0.13
 
