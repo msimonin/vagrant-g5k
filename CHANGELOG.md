@@ -1,6 +1,6 @@
 # 0.0.15
 
-  * Current
+  * Allow parallel boot
 
 # 0.0.14
 
