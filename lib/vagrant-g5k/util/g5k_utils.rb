@@ -2,6 +2,7 @@ require 'net/ssh/multi'
 require 'net/scp'
 require 'json'
 require 'digest'
+require 'thread'
 
 require 'vagrant/util/retryable'
 
@@ -35,20 +36,11 @@ module VagrantPlugins
 
       attr_accessor :node
       
-      attr_accessor :pool
-
       attr_accessor :ports
 
       attr_accessor :oar
-
-      @@instance = nil
-
-      def self.instance
-        @@instance
-      end
-
-
-      def initialize(env)
+    
+      def initialize(env, driver)
         # provider specific config
         @provider_config = env[:machine].provider_config 
         @username = @provider_config.username
@@ -66,23 +58,13 @@ module VagrantPlugins
         @ui = env[:ui]
 
         @logger = Log4r::Logger.new("vagrant::environment")
-        options = {
-          :forward_agent => true
-        }
-        options[:keys] = [@private_key] if !@private_key.nil?
-        if @gateway.nil?
-          @logger.debug("connecting with #{@username} on site #{@site}")
-          @session = Net::SSH.start(@site, @username, options)
-        else
-          @logger.debug("connecting with #{@username} on site #{@site} through #{@gateway}")
-          gateway = Net::SSH::Gateway.new(@gateway, @username, options)
-          @session = gateway.ssh(@site, @username, options)
-        end
-        @@instance = self
+        @driver = driver
+
       end
 
+
       def create_local_working_dir(env)
-        @session.exec("mkdir -p #{cwd(env)}")
+        exec("mkdir -p #{cwd(env)}")
       end
 
       def cwd(env)
@@ -205,48 +187,18 @@ module VagrantPlugins
       end
 
       def close()
-        # Terminate the session
-        @session.close
+        # Terminate the driver
+        @driver[:session].close
       end
 
 
 
       def exec(cmd)
-        @logger.debug("Executing #{cmd}")
-        stdout = ""
-        stderr = ""
-        exit_code = 0
-        @session.open_channel do |channel|
-          channel.exec(cmd) do |ch, success|
-            abort "could not execute command" unless success
-
-            channel.on_data do |c, data|
-              stdout << data.chomp
-            end
-
-            channel.on_extended_data do |c, type, data|
-              stderr << data.chomp
-            end
-
-            channel.on_request("exit-status") do |c,data|
-              exit_code = data.read_long
-            end
-
-            channel.on_close do |c|
-            end
-          end
-        end
-        @session.loop
-        if exit_code != 0
-          @logger.error(:stderr => stderr, :code => exit_code)
-          raise VagrantPlugins::G5K::Errors::CommandError
-        end
-        @logger.debug("Returning #{stdout}")
-        stdout
-      end
+        @driver.exec(cmd)
+     end
 
       def upload(src, dst)
-        @session.scp.upload!(src, dst)
+        @driver.upload(src, dst)
       end
 
       def _generate_drive(env)
