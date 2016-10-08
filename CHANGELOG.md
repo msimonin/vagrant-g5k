@@ -1,3 +1,7 @@
+# 0.0.16
+
+  * Current
+
 # 0.0.15
 
   * Allow parallel boot
