@@ -80,7 +80,11 @@ en:
         One or more of the needed AWS credentials are missing. No environment variables
         are set nor profile '%{profile}' exists at '%{location}'
 
-    errors:
+    errors: 
+      job_error: Job error
+      tired_of_waiting: Tired of waiting
+      remote_command_error: Remote command error
+
       fog_error: |-
         There was an error talking to AWS. The error message is shown
         below:

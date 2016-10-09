@@ -18,7 +18,7 @@ module VagrantPlugins
     class Connection
       include Vagrant::Util::Retryable
 
-      attr_accessor :session
+      attr_accessor :driver
 
       attr_accessor :username
 
@@ -74,17 +74,22 @@ module VagrantPlugins
 
 
       def check_job(job_id)
-        oarstat = exec("oarstat --json")
-        oarstat = JSON.load(oarstat)
-        @logger.debug("Looking for the job id #{job_id} and username #{@username}")
-        r = oarstat.select!{ |k,v| k == job_id and v["owner"] == @username }.values.first
-        @logger.debug(r.inspect)
-        # update the assigned hostname
-        # this will be used to reach the vm 
+        oarstat = exec("oarstat -j #{job_id} --json")
+        # json is 
+        # { "job_id" : {description}}
+        r = JSON.load(oarstat)["#{job_id}"]
         if !r.nil?
           @node = r["assigned_network_address"].first
         end
         return r
+      end
+
+      def process_errors(job_id)
+        job = check_job(job_id)
+        stderr_file = job["stderr_file"]
+        stderr = exec("cat #{stderr_file}")
+        @ui.error("#{stderr_file}:  #{stderr}")
+        raise VagrantPlugins::G5K::Errors::JobError
       end
 
       def delete_job(job_id)
@@ -145,10 +150,13 @@ module VagrantPlugins
         job_id = exec("oarsub --json -t allow_classic_ssh -l \"#{@oar}nodes=1,walltime=#{@walltime}\" --name #{env[:machine].name} --checkpoint 60 --signal 12  \"#{launcher_remote_path} #{args}\" | grep \"job_id\"| cut -d':' -f2").gsub(/"/,"").strip
 
         begin
-          retryable(:on => VagrantPlugins::G5K::Errors::JobNotRunning, :tries => 100, :sleep => 2) do
-            @ui.info("Waiting for the job to be running")
+          retryable(:on => VagrantPlugins::G5K::Errors::JobNotRunning, :tries => 100, :sleep => 1) do
             job = check_job(job_id)
-            if job.nil? or job["state"] != "Running"
+            if !job.nil? and ["Error", "Terminated"].include?(job["state"])
+              process_errors(job_id)
+            end
+            if job.nil? or (!job.nil? and job["state"] != "Running")
+              @ui.info("Waiting for the job to be running")
               raise VagrantPlugins::G5K::Errors::JobNotRunning 
             end
             # saving the id
@@ -159,7 +167,7 @@ module VagrantPlugins
           @ui.error("Tired of waiting")
           raise VagrantPlugins::G5K::Errors::JobNotRunning
         end
-        @ui.info("VM booted @#{@site} on #{@node}")
+        @ui.info("booted @#{@site} on #{@node}")
 
       end
 
@@ -229,7 +237,7 @@ module VagrantPlugins
           file = _rbd_clone_or_copy_image(env, clone = false)
         end
         # encapsulate the file to a qemu ready disk description
-        file = "rbd:#{file}:id=#{@image["id"]}:conf=#{@image["conf"]}"
+        file = "rbd:#{file}:id=#{@image["id"]}:conf=#{@image["conf"]}:rbd_cache=true,cache=writeback"
         @logger.debug("Generated drive string : #{file}")
         return file
       end
