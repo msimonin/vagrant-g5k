@@ -1,3 +1,7 @@
+# 0.0.17
+
+  * Current
+
 # 0.0.16
 
   * Improve stdout (add information on physical node)
