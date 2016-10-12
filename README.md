@@ -45,6 +45,7 @@ to back the disk image of the virtual machines :
 * `vagrant halt`
 * `vagrant provision`
 * `vagrant ssh`
+* `vagrant ssh-config`
 * `vagrant status`
 * `vagrant up`
 
