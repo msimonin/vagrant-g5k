@@ -1,6 +1,7 @@
 # 0.0.16
 
-  * Current
+  * Improve stdout (add information on physical node)
+  * Stop the polling if the job is terminated
 
 # 0.0.15
 
