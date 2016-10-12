@@ -56,3 +56,13 @@ You can read[1] for further information on how to configure ceph on grid'5000.
 
 [1] : https://www.grid5000.fr/mediawiki/index.php/Ceph
 
+## Developping
+
+* clone the repository
+* use `$ bundle` to install all the dependencies (this may take some time)
+* then test your code against the provided (or modified) Vagrantfile using :
+```
+VAGRANT_LOG=debug VAGRANT_DEFAULT_PROVIDER=g5k bundle exec vagrant up
+```
+
+
