@@ -47,3 +47,11 @@ to back the disk image of the virtual machines :
 * `vagrant ssh`
 * `vagrant status`
 * `vagrant up`
+
+## Use ceph as backing strategy
+
+Vagrant-g5k will look into `~/.ceph/config` on each frontend where VMs are started.
+You can read[1] for further information on how to configure ceph on grid'5000.
+
+[1] : https://www.grid5000.fr/mediawiki/index.php/Ceph
+
