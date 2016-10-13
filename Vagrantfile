@@ -17,7 +17,8 @@ Vagrant.configure(2) do |config|
         my.vm.provider "g5k" do |g5k|
           g5k.project_id = "vagrant-g5k"
           g5k.site = "#{site}"
-          g5k.gateway = "access.grid5000.fr" 
+          g5k.gateway = "access.grid5000.fr"
+          g5k.walltime = "01:00:00"
 #          g5k.image = {
 #             "pool"     => "msimonin_rbds",
 #             "rbd"      => "bases/alpine_docker",
