@@ -36,9 +36,11 @@ module VagrantPlugins
       def self.action_ssh
         Vagrant::Action::Builder.new.tap do |b|
           b.use ConfigValidate
-          b.use Call, IsCreated do |env, b2|
-            if !env[:result]
-              b2.use MessageNotCreated
+          # read_state is hook by the call to machine.state.id
+          # in GetState Middleware
+          b.use Call, GetState do |env, b2|
+            if env[:result] != :Running
+              b2.use MessageNotRunning
               next
             end
             b2.use SSHExec
@@ -50,12 +52,15 @@ module VagrantPlugins
       def self.action_up
         Vagrant::Action::Builder.new.tap do |b|
           b.use ConfigValidate
-          b.use ConnectG5K
-          b.use CreateLocalWorkingDir
-          b.use Call, IsCreated do |env1, b1|
-            if env1[:result] then
-              b1.use MessageAlreadyCreated
+          b.use Call, GetState do |env1, b1|
+            if env1[:result] == :Running then
+              b1.use MessageAlreadyRunning
+            elsif env1[:result] == :Waiting
+              b1.use ConnectG5K
+              b1.use WaitInstance
             else
+              b1.use ConnectG5K
+              b1.use CreateLocalWorkingDir
               b1.use RunInstance # launch a new instance
             end
           end
@@ -69,13 +74,18 @@ module VagrantPlugins
             if env[:result]
               b2.use ConfigValidate
               b2.use ConnectG5K
-              b2.use Call, IsCreated do |env2, b3|
-                if !env2[:result]
+              b2.use Call, GetState do |env2, b3|
+                if [:Running, :Waiting].include?(env2[:result])
+                  b3.use DeleteJob
+                  b3.use DeleteDisk
+                  next
+                elsif env2[:result] == :shutdown
+                  b3.use DeleteDisk
+                  next
+                else
                   b3.use MessageNotCreated
                   next
                 end
-                b3.use DeleteJob
-                b3.use DeleteDisk
               end
             else
               b2.use MessageWillNotDestroy
@@ -89,12 +99,14 @@ module VagrantPlugins
         Vagrant::Action::Builder.new.tap do |b|
             b.use ConfigValidate
             b.use ConnectG5K
-            b.use Call, IsCreated do |env1, b2|
-              if !env1[:result]
+            b.use Call, GetState do |env1, b2|
+              if [:Running, :Waiting].include?(env1[:result])
+                b2.use DeleteJob
+                next
+              else
                 b2.use MessageNotCreated
                 next
               end
-            b2.use DeleteJob
           end
         end
       end
@@ -103,9 +115,9 @@ module VagrantPlugins
       def self.action_provision
         Vagrant::Action::Builder.new.tap do |b|
           b.use ConfigValidate
-          b.use Call, IsCreated do |env, b2|
-            if !env[:result]
-              b2.use MessageNotCreated
+          b.use Call, GetState do |env, b2|
+            if env[:result] != :Running
+              b2.use MessageNotRunning
               next
             end
             b2.use Provision
@@ -119,13 +131,16 @@ module VagrantPlugins
       autoload :CreateLocalWorkingDir, action_root.join("create_local_working_dir")
       autoload :DeleteJob, action_root.join("delete_job")
       autoload :DeleteDisk, action_root.join("delete_disk")
-      autoload :IsCreated, action_root.join("is_created")
-      autoload :MessageAlreadyCreated, action_root.join("message_already_created")
+      autoload :GetState, action_root.join("get_state")
+      autoload :MessageAlreadyRunning, action_root.join("message_already_running")
       autoload :MessageNotCreated, action_root.join("message_not_created")
+      autoload :MessageNotRunning, action_root.join("message_not_running")
       autoload :ReadSSHInfo, action_root.join("read_ssh_info")
       autoload :ReadState, action_root.join("read_state")
       autoload :RunInstance, action_root.join("run_instance")
       autoload :StartInstance, action_root.join("start_instance")
+      autoload :WaitInstance, action_root.join("wait_instance")
+
 
     end
   end

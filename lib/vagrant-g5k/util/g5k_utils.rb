@@ -74,13 +74,22 @@ module VagrantPlugins
 
 
       def check_job(job_id)
-        oarstat = exec("oarstat -j #{job_id} --json")
-        # json is 
-        # { "job_id" : {description}}
-        r = JSON.load(oarstat)["#{job_id}"]
-        if !r.nil?
-          @node = r["assigned_network_address"].first
+        # Note: when switching from on site to another
+        # this command may failed due the job_id that has nothing 
+        # to do with the new site. 
+        r = nil
+        begin
+          oarstat = exec("oarstat -j #{job_id} --json")
+          # json is 
+          # { "job_id" : {description}}
+          r = JSON.load(oarstat)["#{job_id}"]
+          if !r.nil?
+            @node = r["assigned_network_address"].first
+          end
+        rescue VagrantPlugins::G5K::Errors::CommandError
+          @logger.debug "Rescued error when executing the command"
         end
+
         return r
       end
 
@@ -94,7 +103,13 @@ module VagrantPlugins
 
       def delete_job(job_id)
         @ui.info("Deleting the associated job")
-        exec("oardel -c -s 12 #{job_id}")
+        begin
+          exec("oardel -c -s 12 #{job_id}")
+        rescue VagrantPlugins::G5K::Errors::CommandError
+          @logger.debug "Checkpointing failed, sending hard deletion"
+          exec("oardel #{job_id}")
+        end
+
       end
 
 
@@ -148,7 +163,12 @@ module VagrantPlugins
         # Submitting a new job
         # Getting the job_id as a ruby string
         job_id = exec("oarsub --json -t allow_classic_ssh -l \"#{@oar}nodes=1,walltime=#{@walltime}\" --name #{env[:machine].name} --checkpoint 60 --signal 12  \"#{launcher_remote_path} #{args}\" | grep \"job_id\"| cut -d':' -f2").gsub(/"/,"").strip
+        # saving the id asap
+        env[:machine].id = job_id
+        wait_for(job_id, env)
+      end
 
+      def wait_for(job_id, env)
         begin
           retryable(:on => VagrantPlugins::G5K::Errors::JobNotRunning, :tries => 100, :sleep => 1) do
             job = check_job(job_id)
@@ -159,17 +179,15 @@ module VagrantPlugins
               @ui.info("Waiting for the job to be running")
               raise VagrantPlugins::G5K::Errors::JobNotRunning 
             end
-            # saving the id
-            env[:machine].id = job["Job_Id"]
             break
           end
         rescue VagrantPlugins::G5K::Errors::JobNotRunning
           @ui.error("Tired of waiting")
           raise VagrantPlugins::G5K::Errors::JobNotRunning
         end
-        @ui.info("booted @#{@site} on #{@node}")
-
+        @ui.info("ready @#{@site} on #{@node}")
       end
+
 
       def delete_disk(env)
         if [STRATEGY_DIRECT, STRATEGY_SNAPSHOT].include?(@image["backing"])

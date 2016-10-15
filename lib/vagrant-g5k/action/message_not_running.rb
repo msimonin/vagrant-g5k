@@ -1,13 +1,13 @@
 module VagrantPlugins
   module G5K
     module Action
-      class MessageAlreadyCreated
+      class MessageNotRunning
         def initialize(app, env)
           @app = app
         end
 
         def call(env)
-          env[:ui].info("vagrant_g5k.already_up", :status => "created")
+          env[:ui].info("vagrant_g5k.not_running")
           @app.call(env)
         end
       end

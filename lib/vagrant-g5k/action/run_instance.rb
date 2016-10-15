@@ -16,6 +16,7 @@ module VagrantPlugins
         end
 
         def call(env)
+          # Note: here we are sure that we have to start the vm
           conn = env[:g5k_connection]
           conn.launch_vm(env)
           @app.call(env)
