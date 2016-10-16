@@ -7,12 +7,6 @@ require 'thread'
 module VagrantPlugins
   module G5K
 
-    class << self
-      attr_accessor :g5k_lock
-      attr_accessor :pool
-    end
-    @g5k_lock = Mutex.new
-    @pool = {}
 
     module Action
       # This action connects to G5K, verifies credentials work, and
@@ -20,6 +14,7 @@ module VagrantPlugins
       # in the environment.
       class ConnectG5K
 
+        include VagrantPlugins::G5K
 
         def initialize(app, env)
           @app    = app
@@ -46,7 +41,7 @@ module VagrantPlugins
             :forward_agent => true
           }
           options[:keys] = [private_key] if !private_key.nil?
-          VagrantPlugins::G5K.g5k_lock.synchronize {
+          lockable(:lock => VagrantPlugins::G5K.g5k_lock) do
             if VagrantPlugins::G5K.pool[key].nil?
               @logger.debug "Creating a new session object for #{key}"
               if gateway.nil?
@@ -61,7 +56,7 @@ module VagrantPlugins
             else
               @logger.debug "Reusing existing session for #{key}"
             end
-          }
+          end
           return VagrantPlugins::G5K.pool[key]
         end
       end
