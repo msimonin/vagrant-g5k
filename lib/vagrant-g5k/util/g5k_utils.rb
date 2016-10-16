@@ -102,11 +102,12 @@ module VagrantPlugins
       end
 
       def delete_job(job_id)
-        @ui.info("Deleting the associated job")
+        @ui.info("Soft deleting the associated job")
         begin
           exec("oardel -c -s 12 #{job_id}")
         rescue VagrantPlugins::G5K::Errors::CommandError
           @logger.debug "Checkpointing failed, sending hard deletion"
+          @ui.warn("Soft delete failed : proceeding to hard delete")
           exec("oardel #{job_id}")
         end
 
