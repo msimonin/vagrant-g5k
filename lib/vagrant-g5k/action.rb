@@ -48,6 +48,23 @@ module VagrantPlugins
         end
       end
 
+
+      # This action is called when vagrant ssh -C "..." is used
+      def self.action_ssh_run
+        Vagrant::Action::Builder.new.tap do |b|
+          b.use ConfigValidate
+          b.use Call, GetState do |env, b2|
+            if env[:result] != :Running
+              b2.use MessageNotRunning
+              next
+            end
+
+            b2.use SSHRun
+          end
+        end
+      end
+
+
       # This action is called to bring the box up from nothing.
       def self.action_up
         Vagrant::Action::Builder.new.tap do |b|
