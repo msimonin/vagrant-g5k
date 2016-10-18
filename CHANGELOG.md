@@ -1,6 +1,6 @@
 # 0.0.17
 
-  * Current
+  * Add bridged network support
 
 # 0.0.16
 

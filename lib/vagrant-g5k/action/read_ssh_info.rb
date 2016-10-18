@@ -12,15 +12,20 @@ module VagrantPlugins
         end
 
         def call(env)
-          ports = env[:machine].provider_config.ports
-          ssh_fwd = ports.select{ |x| x.split(':')[1] == '22'}.first
-          if ssh_fwd.nil?
-            env[:ui].error "SSH port 22 must be forwarded"
-            raise Error "SSh port 22 isn't forwarded"
+          net = env[:machine].provider_config.net
+          # Note: better to encapsulate this in a NetDriver
+          if net["type"] == 'bridge'
+            env[:machine_ssh_info] = read_ssh_info(env[:g5k_connection], env[:machine])
+          else
+            ports = net["ports"]
+            ssh_fwd = ports.select{ |x| x.split(':')[1] == '22'}.first
+            if ssh_fwd.nil?
+              env[:ui].error "SSH port 22 must be forwarded"
+              raise Error "SSh port 22 isn't forwarded"
+            end
+            ssh_fwd = ssh_fwd.split('-:')[0]
+            env[:machine_ssh_info] = read_ssh_info(env[:g5k_connection], env[:machine], ssh_fwd)
           end
-          ssh_fwd = ssh_fwd.split('-:')[0]
-          env[:machine_ssh_info] = read_ssh_info(env[:g5k_connection], env[:machine], ssh_fwd)
-
           @app.call(env)
         end
 
@@ -33,17 +38,14 @@ module VagrantPlugins
         end
 
 
-        def read_ssh_info(conn, machine, ssh_fwd)
+        def read_ssh_info(conn, machine, ssh_fwd = nil)
           return nil if machine.id.nil?
 
-          if ssh_fwd.nil? 
-            raise Error "ssh_port should be forwarded"
-          end
-          
           ssh_info = {
                    :host          => conn.node,
-                   :port          => ssh_fwd,
           }
+
+          ssh_info[:port] = ssh_fwd unless ssh_fwd.nil?
 
           if !conn.gateway.nil?
             ssh_info[:proxy_command] = "ssh #{conn.username}@#{conn.gateway} #{ssh_key(conn)} nc %h %p"

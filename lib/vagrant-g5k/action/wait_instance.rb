@@ -9,7 +9,7 @@ module VagrantPlugins
         def call(env)
           job_id = env[:machine].id
           conn = env[:g5k_connection]
-          conn.wait_for(job_id, env)
+          conn.wait_for_vm(job_id)
           @app.call(env)
         end
       end

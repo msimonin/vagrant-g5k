@@ -16,7 +16,7 @@ module VagrantPlugins
 
         def call(env)
           conn = env[:g5k_connection]
-          conn.create_local_working_dir(env)
+          conn.create_local_working_dir()
           @app.call(env)
         end
 

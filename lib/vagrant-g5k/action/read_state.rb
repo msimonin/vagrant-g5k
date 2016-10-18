@@ -35,6 +35,14 @@ module VagrantPlugins
             if job.nil?
               return :not_created
             end
+            if env[:machine].provider_config.net["type"] == "bridge"
+              # is the subnet still there ?
+              subnet_id = conn._find_subnet(id)
+              if subnet_id.nil?
+                return :subnet_missing
+              end
+            end
+
             return job["state"].to_sym
           end
 

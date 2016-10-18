@@ -40,11 +40,11 @@ module VagrantPlugins
       attr_accessor :image
 
 
-      # G5K ports mapping
+      # G5K network options
       # 
       #
-      # @return [Array]
-      attr_accessor :ports
+      # @return [Hash]
+      attr_accessor :net
 
       # OAR resource selection
       # 
@@ -59,6 +59,10 @@ module VagrantPlugins
         @gateway          = nil
         @walltime         = "01:00:00"
         @oar              = ""
+        @net              = {
+          'type' => 'nat',
+          'ports' => ['2222-,22']
+        }
       end
 
       def finalize!()

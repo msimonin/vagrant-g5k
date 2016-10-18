@@ -7,6 +7,7 @@ require 'thread'
 require 'vagrant/util/retryable'
 
 LAUNCHER_SCRIPT = "launch_vm_fwd.sh"
+LAUNCHER_BRIDGE_SCRIPT = "launch_vm_bridge.sh"
 
 STRATEGY_SNAPSHOT = "snapshot"
 STRATEGY_COPY = "copy"
@@ -17,6 +18,7 @@ module VagrantPlugins
   module G5K
     class Connection
       include Vagrant::Util::Retryable
+      include VagrantPlugins::G5K
 
       attr_accessor :driver
 
@@ -35,9 +37,9 @@ module VagrantPlugins
       attr_accessor :logger
 
       attr_accessor :node
-      
-      attr_accessor :ports
 
+      attr_accessor :net
+      
       attr_accessor :oar
     
       def initialize(env, driver)
@@ -48,12 +50,12 @@ module VagrantPlugins
         @private_key = @provider_config.private_key
         @site = @provider_config.site
         @walltime = @provider_config.walltime
-        @ports = @provider_config.ports
         @image= @provider_config.image
         @gateway = @provider_config.gateway
         @oar = "{#{@provider_config.oar}}/" if @provider_config.oar != ""
+        @net = @provider_config.net
         # grab the network config of the vm
-        @networks = env[:machine].config.vm.networks
+        # @networks = env[:machine].config.vm.networks
         # to log to the ui
         @ui = env[:ui]
 
@@ -63,11 +65,11 @@ module VagrantPlugins
       end
 
 
-      def create_local_working_dir(env)
-        exec("mkdir -p #{cwd(env)}")
+      def create_local_working_dir()
+        exec("mkdir -p #{cwd()}")
       end
 
-      def cwd(env)
+      def cwd()
         # remote working directory
         File.join(".vagrant", @project_id)
       end
@@ -109,10 +111,10 @@ module VagrantPlugins
           @logger.debug "Checkpointing failed, sending hard deletion"
           @ui.warn("Soft delete failed : proceeding to hard delete")
           exec("oardel #{job_id}")
+        ensure
+          _update_subnet_use("-")
         end
-
       end
-
 
       def check_local_storage(env)
         # Is the disk image already here ?
@@ -131,7 +133,7 @@ module VagrantPlugins
         if [STRATEGY_SNAPSHOT, STRATEGY_DIRECT].include?(strategy)
           file_to_check = @image["path"]
         else
-          file_to_check = File.join(cwd(env), env[:machine].name.to_s)
+          file_to_check = File.join(cwd(), env[:machine].name.to_s)
         end
           exec("[ -f \"#{file_to_check}\" ] && echo #{file_to_check} || echo \"\"")
       end
@@ -142,34 +144,56 @@ module VagrantPlugins
         if [STRATEGY_SNAPSHOT, STRATEGY_DIRECT].include?(strategy)
           file_to_check = @image["rbd"]
         else
-          file_to_check = File.join(cwd(env), env[:machine].name.to_s)
+          file_to_check = File.join(cwd(), env[:machine].name.to_s)
         end
         exec("(rbd --pool #{@image["pool"]} --id #{@image["id"]} --conf #{@image["conf"]} ls | grep \"^#{file_to_check}\") || echo \"\"")
       end
 
 
       def launch_vm(env)
-        launcher_path = File.join(File.dirname(__FILE__), LAUNCHER_SCRIPT)
+        if @net["type"] == "bridge"
+          launcher_path = File.join(File.dirname(__FILE__), LAUNCHER_BRIDGE_SCRIPT)
+        else
+          launcher_path = File.join(File.dirname(__FILE__), LAUNCHER_SCRIPT)
+        end
+
         @ui.info("Launching the VM on #{@site}")
         # Checking the subnet job
         # uploading the launcher
-        launcher_remote_path = File.join(cwd(env), LAUNCHER_SCRIPT)
+        launcher_remote_path = File.join(cwd(), LAUNCHER_SCRIPT)
         upload(launcher_path, launcher_remote_path)
 
         # Generate partial arguments for the kvm command
-        drive = _generate_drive(env)
+        # NOTE: net is first dur the the shape of the bridge launcher script
+        # TODO: clean / improve this (that smells)
         net = _generate_net()
-
-        args = [drive, net].join(" ")
+        drive = _generate_drive(env)
+        
+        args = [net, drive].join(" ")
         # Submitting a new job
         # Getting the job_id as a ruby string
-        job_id = exec("oarsub --json -t allow_classic_ssh -l \"#{@oar}nodes=1,walltime=#{@walltime}\" --name #{env[:machine].name} --checkpoint 60 --signal 12  \"#{launcher_remote_path} #{args}\" | grep \"job_id\"| cut -d':' -f2").gsub(/"/,"").strip
+        cmd = []
+        cmd << "oarsub"
+        cmd << "--json"
+        cmd << "-t allow_classic_ssh"
+        cmd << "-l \"#{@oar}nodes=1,walltime=#{@walltime}\""
+        cmd << "--name #{env[:machine].name}"
+        cmd << "--checkpoint 60 --signal 12"
+        cmd << "'#{launcher_remote_path} #{args}'"
+        cmd << "| grep \"job_id\"| cut -d':' -f2"
+        job_id = exec(cmd.join(" ")).gsub(/"/,"").strip
         # saving the id asap
         env[:machine].id = job_id
-        wait_for(job_id, env)
+        wait_for_vm(job_id)
+      end
+     
+      def wait_for_vm(job_id)
+        _wait_for(job_id)
+        _update_subnet_use("+")
+        @ui.info("ready @#{@site} on #{@node}")
       end
 
-      def wait_for(job_id, env)
+      def _wait_for(job_id)
         begin
           retryable(:on => VagrantPlugins::G5K::Errors::JobNotRunning, :tries => 100, :sleep => 1) do
             job = check_job(job_id)
@@ -186,7 +210,6 @@ module VagrantPlugins
           @ui.error("Tired of waiting")
           raise VagrantPlugins::G5K::Errors::JobNotRunning
         end
-        @ui.info("ready @#{@site} on #{@node}")
       end
 
 
@@ -197,10 +220,10 @@ module VagrantPlugins
         end
 
         if @image["pool"].nil?
-          disk = File.join(cwd(env), env[:machine].name.to_s)
+          disk = File.join(cwd(), env[:machine].name.to_s)
           exec("rm -f #{disk}")
         else
-          disk = File.join(@image["pool"], cwd(env), env[:machine].name.to_s)
+          disk = File.join(@image["pool"], cwd(), env[:machine].name.to_s)
           begin
             retryable(:on => VagrantPlugins::G5K::Errors::CommandError, :tries => 10, :sleep => 5) do
               exec("rbd rm  #{disk} --conf #{@image["conf"]} --id #{@image["id"]}" )
@@ -218,11 +241,9 @@ module VagrantPlugins
         @driver[:session].close
       end
 
-
-
       def exec(cmd)
         @driver.exec(cmd)
-     end
+      end
 
       def upload(src, dst)
         @driver.upload(src, dst)
@@ -275,7 +296,7 @@ module VagrantPlugins
 
       def _rbd_clone_or_copy_image(env, clone = true)
         # destination in the same pool under the .vagrant ns
-        destination = File.join(@image["pool"], cwd(env), env[:machine].name.to_s)
+        destination = File.join(@image["pool"], cwd(), env[:machine].name.to_s)
         # Even if nothing bad will happen when the destination already exist, we should test it before
         exists = _check_rbd_local_storage(env)
         if exists == ""
@@ -297,7 +318,7 @@ module VagrantPlugins
       
       def _file_clone_or_copy_image(env, clone = true)
           @ui.info("Clone the file image")
-          file = File.join(cwd(env), env[:machine].name.to_s)
+          file = File.join(cwd(), env[:machine].name.to_s)
           exists = _check_file_local_storage(env)
           if exists == ""
             if clone 
@@ -310,13 +331,100 @@ module VagrantPlugins
       end
 
       def _generate_net()
-        fwd_ports = @ports.map do |p|
+        net = ""
+        @logger.debug(@net)
+        if @net["type"] == "bridge"
+          # we reserve a subnet if necessary and pick one mac/ip from it
+          lockable(:lock => VagrantPlugins::G5K.subnet_lock) do
+            subnet_job_id = _find_subnet
+            if subnet_job_id.nil? 
+              subnet_job_id = _create_subnet
+              _wait_for(subnet_job_id)
+              # we can't call this inside the launcher script
+              # let's put it in a file instead...
+              exec("g5k-subnets -j #{subnet_job_id} -im > #{_subnet_file}" )
+              # initialize subnet count
+              exec("echo 0 > #{_subnet_count}")
+            end
+            @subnet_id = subnet_job_id
+            net = _subnet_file
+          end
+        else
+        fwd_ports = @net["ports"].map do |p|
           "hostfwd=tcp::#{p}"
         end.join(',')
         net = "-net nic,model=virtio -net user,#{fwd_ports}"
-        @logger.info("Mapping ports")
+        end
+
+        @logger.debug("Generated net string : #{net}")
         return net
       end
+
+      def _subnet_file()
+        return File.join(cwd(), 'subnet')
+      end
+
+      def _subnet_count()
+        return File.join(cwd(), 'subnet-count')
+      end
+
+
+      def _find_subnet(vmid = nil)
+        begin
+          jobs = exec("oarstat -u --json")
+          jobs = JSON.load(jobs)
+          s = jobs.select{|k,v| v["name"] == "#{@project_id}-net" }.values.first
+          # we set @node to the ip in the vnet
+          # if there's a subnet and a vmid, read the mac/ip 
+          # rebuild the ip associated with that vm
+          if not vmid.nil?
+            subnet = exec("cat  #{_subnet_file}" )
+                      .split("\n")
+                      .map{|macip| macip.split("\t")}
+            # recalculate ip given to this VM
+            macip = subnet[vmid.to_i.modulo(1022)]
+            @node = macip[0]
+            @logger.debug("#{subnet.size} - #{vmid} - #{macip}")
+          end
+          return s["Job_Id"]
+        rescue Exception => e
+          @logger.debug(e)
+        end
+        nil
+      end
+
+      def _create_subnet()
+        cmd = []
+        cmd << "oarsub"
+        cmd << "--json"
+        cmd << "--name '#{@project_id}-net'"
+        cmd << "-l 'slash_22=1, walltime=#{@walltime}' 'sleep 84400'"
+        # getting the job_id for this subnet
+        cmd << "| grep 'job_id'"
+        cmd << "| cut -d':' -f2"
+
+        exec(cmd.join(" ")).gsub(/"/,"").strip
+      end
+
+      # Update the subnet use 
+      # op is a string "+" or "-"
+      # if after the update the subnet use is 0 
+      # the subnet in use is also deleted 
+      def _update_subnet_use(op)
+        cmd = []
+        cmd << "c=$(cat #{_subnet_count});"
+        cmd << "echo $(($c #{op} 1)) > #{_subnet_count};"
+        cmd << "cat #{_subnet_count}"
+        count = exec(cmd.join(" "))
+        @logger.info("subnet_count = #{count}")
+        if count.to_i <= 0 
+          @logger.info("deleteting the associated subnet")
+          subnet_id = _find_subnet()
+          exec("oardel #{subnet_id}")
+        end
+
+      end
+
     end
   end
 end

@@ -8,9 +8,11 @@ module VagrantPlugins
 
     class << self
       attr_accessor :g5k_lock
+      attr_accessor :subnet_lock
       attr_accessor :pool
     end
     @g5k_lock = Mutex.new
+    @subnet_lock = Mutex.new
     @pool = {}
 
     lib_path = Pathname.new(File.expand_path("../vagrant-g5k", __FILE__))
