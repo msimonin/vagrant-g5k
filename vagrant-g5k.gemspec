@@ -16,14 +16,14 @@ Gem::Specification.new do |s|
   s.rubyforge_project         = "vagrant-g5k"
 
   s.add_runtime_dependency "iniparse", "~> 1.4", ">= 1.4.2"
-  s.add_runtime_dependency "net-ssh", "~> 3.0.2"
-  s.add_runtime_dependency "net-scp", "~> 1.1.2"
-  s.add_runtime_dependency "net-ssh-multi", "~> 1.2.1 "
+  s.add_runtime_dependency "net-ssh", "~> 3.0", ">= 3.0.2"
+  s.add_runtime_dependency "net-scp", "~> 1.1", ">= 1.1.2"
+  s.add_runtime_dependency "net-ssh-multi", "~> 1.2", ">=1.2.1"
 
-  s.add_development_dependency "rake"
+  #s.add_development_dependency "rake"
   # rspec 3.4 to mock File
-  s.add_development_dependency "rspec", "~> 3.4"
-  s.add_development_dependency "rspec-its"
+  #s.add_development_dependency "rspec", "~> 3.4"
+  #s.add_development_dependency "rspec-its"
 
   # The following block of code determines the files that should be included
   # in the gem. It does this by reading all the files in the directory where
