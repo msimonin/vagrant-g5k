@@ -1,6 +1,10 @@
 # 0.0.17
 
   * Add bridged network support
+  * Add support for ssh run command (cli : vagrant ssh vm -c "...".)
+  * Add generic lockable function
+  * Add generic GetState Middleware (destroy can be called even if the VM is
+  terminated)
 
 # 0.0.16
 
