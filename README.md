@@ -39,6 +39,36 @@ to back the disk image of the virtual machines :
 * `direct`: will use the image directly (you'll need r/w access to the image)
 * `snapshot`: will let `kvm` create an ephemeral copy on write image.
 
+## Note on network configuration
+
+Two networking modes are supported :
+
+* NAT networking. VMs traffic is NATed to the outside world.
+The outside world can access the VMs on dedicated ports that are mapped in the host of Grid'5000.
+```
+config.vm.provider "g5k" do |g5k|
+  [...]
+  g5k.net = {
+    "type": "nat",
+    "ports": ["2222-:22", "8080-":80]
+  }
+end
+```
+
+e.g : Assuming `parapluie-1.rennes.grid5000.fr` hosts the VM. A SSH tunnel from your local machine to `parapluie-1.rennes.grid5000.fr:8080` will be forwarded to the port `80` of the VM.
+
+* Bridge networking. VMs are given an IP from a Grid'5000 subnet. They can thus communicate with each others using their IPs.
+
+```
+config.vm.provider "g5k" do |g5k|
+  [...]
+  g5k.net = {
+    "type": "bridge"
+  }
+end
+```
+
+
 ## Supported operations
 
 * `vagrant destroy`
@@ -64,5 +94,3 @@ You can read[1] for further information on how to configure ceph on grid'5000.
 ```
 VAGRANT_LOG=debug VAGRANT_DEFAULT_PROVIDER=g5k bundle exec vagrant up
 ```
-
-
