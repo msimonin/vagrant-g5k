@@ -32,13 +32,13 @@ Vagrant.configure(2) do |config|
         "backing" => "snapshot"
       }
 
-      g5k.net = {
-        "type" => "bridge"
-      }
-#        g5k.net = {
-#          "type" => "nat",
-#          "ports" => ["2222-:22"]
-#        }
+#      g5k.net = {
+#        "type" => "bridge"
+#      }
+        g5k.net = {
+          "type" => "nat",
+          "ports" => ["2222-:22"]
+        }
 
 
       # oar selection of resource
@@ -53,13 +53,13 @@ Vagrant.configure(2) do |config|
 
     end #vm
     
-    config.vm.define "vm2" do |my|
-      my.vm.box = "dummy"
+#    config.vm.define "vm2" do |my|
+#      my.vm.box = "dummy"
 
-      my.ssh.username = "root"
-      my.ssh.password = ""
+#      my.ssh.username = "root"
+#      my.ssh.password = ""
 
-    end #vm
+#    end #vm
     # Repeat block to define another vm 
     # config.vm.define "vm2" do |my|
     #   

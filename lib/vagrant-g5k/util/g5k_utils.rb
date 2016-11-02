@@ -411,6 +411,9 @@ module VagrantPlugins
       # if after the update the subnet use is 0 
       # the subnet in use is also deleted 
       def _update_subnet_use(op)
+        if not @net['type'] == 'bridge'
+          return
+        end
         cmd = []
         cmd << "c=$(cat #{_subnet_count});"
         cmd << "echo $(($c #{op} 1)) > #{_subnet_count};"

@@ -1,6 +1,6 @@
 # 0.0.18
 
-  * Current
+  * Fix update_subnet_use when using nat network
 
 # 0.0.17
 
