@@ -68,6 +68,8 @@ config.vm.provider "g5k" do |g5k|
 end
 ```
 
+> Due to the dynamic nature of the subnet reserved on Grid'5000, IPs of the VMs will change accross reboots
+
 
 ## Supported operations
 
