@@ -61,7 +61,7 @@ module VagrantPlugins
         @oar              = ""
         @net              = {
           'type' => 'nat',
-          'ports' => ['2222-,22']
+          'ports' => ['2222-:22']
         }
       end
 
@@ -77,7 +77,8 @@ module VagrantPlugins
         errors << "g5k site is required" if @site.nil?
         errors << "g5k image is required" if @image.nil?
         errors << "g5k image must be a Hash" if !@image.is_a?(Hash)
-        
+        errors << "g5k net must be a Hash" if !@net.is_a?(Hash)
+
         { "G5K Provider" => errors }
       end
 
