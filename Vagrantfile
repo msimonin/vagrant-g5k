@@ -17,34 +17,36 @@ Vagrant.configure(2) do |config|
       g5k.walltime = "01:00:00"
 
       # Image backed by the ceph cluster
-#          g5k.image = {
-#             "pool"     => "msimonin_rbds",
-#             "rbd"      => "bases/alpine_docker",
-#             "snapshot" => "parent",
-#             "id"       => "$USER",
-#            "conf"      => "$HOME/.ceph/config",
-#            "backing"   => "snapshot"
-#           }
+       #   g5k.image = {
+       #      :pool     => "msimonin_rbds",
+       #      :rbd      => "bases/alpine_docker",
+       #      :snapshot => "parent",
+       #      :id       => "$USER",
+       #      :conf      => "$HOME/.ceph/config",
+       #      :backing   => "snapshot"
+       #    }
 #
       # Image backed on the frontend filesystem           
       g5k.image = {
-        "path"    => "/grid5000/virt-images/alpine_docker.qcow2",
-        "backing" => "snapshot"
+        :path    => "/grid5000/virt-images/alpine_docker.qcow2",
+        :backing => "snapshot"
       }
 
-#      g5k.net = {
-#        "type" => "bridge"
-#      }
-        g5k.net = {
-          "type" => "nat",
-          "ports" => ["2222-:22"]
-        }
+      # g5k.net = {
+      #  "type" => "bridge"
+      #}
+      g5k.net = {
+        :type => "nat",
+        :ports => ["2222-:22"]
+      }
 
 
       # oar selection of resource
       g5k.oar = "virtual != 'none'"
     end #g5k
 
+
+    
     config.vm.define "vm1" do |my|
       my.vm.box = "dummy"
 
@@ -53,13 +55,6 @@ Vagrant.configure(2) do |config|
 
     end #vm
     
-#    config.vm.define "vm2" do |my|
-#      my.vm.box = "dummy"
-
-#      my.ssh.username = "root"
-#      my.ssh.password = ""
-
-#    end #vm
     # Repeat block to define another vm 
     # config.vm.define "vm2" do |my|
     #   

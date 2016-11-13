@@ -1,0 +1,300 @@
+require 'net/ssh/multi'
+require 'net/scp'
+require 'json'
+require 'digest'
+require 'thread'
+
+require 'vagrant/util/retryable'
+
+LAUNCHER_SCRIPT = "util/launch_vm.sh"
+
+STRATEGY_SNAPSHOT = "snapshot"
+STRATEGY_COPY = "copy"
+STRATEGY_COW = "cow"
+STRATEGY_DIRECT = "direct"
+
+module VagrantPlugins
+  module G5K
+    class Connection
+      include Vagrant::Util::Retryable
+      include VagrantPlugins::G5K
+
+      attr_accessor :driver
+
+      attr_accessor :username
+
+      attr_accessor :gateway
+
+      attr_accessor :project_id
+
+      attr_accessor :private_key
+
+      attr_accessor :site
+
+      attr_accessor :walltime
+
+      attr_accessor :logger
+
+      attr_accessor :node
+
+      attr_accessor :net
+      
+      attr_accessor :oar
+    
+      def initialize(env, driver, oar_driver, net_driver)
+        # provider specific config
+        @provider_config = env[:machine].provider_config 
+        @username = @provider_config.username
+        @project_id = @provider_config.project_id
+        @private_key = @provider_config.private_key
+        @site = @provider_config.site
+        @walltime = @provider_config.walltime
+        @image= @provider_config.image
+        @gateway = @provider_config.gateway
+        @oar = "{#{@provider_config.oar}}/" if @provider_config.oar != ""
+        @net = @provider_config.net
+        # grab the network config of the vm
+        # @networks = env[:machine].config.vm.networks
+        # to log to the ui
+        @ui = env[:ui]
+
+        @logger = Log4r::Logger.new("vagrant::g5k_connection")
+        @driver = driver
+        @oar_driver = oar_driver
+        @net_driver = net_driver
+      end
+
+
+      def create_local_working_dir()
+        exec("mkdir -p #{cwd()}")
+      end
+
+      def cwd()
+        # remote working directory
+        File.join(".vagrant", @project_id)
+      end
+
+      def process_errors(job_id)
+        job = check_job(job_id)
+        stderr_file = job["stderr_file"]
+        stderr = exec("cat #{stderr_file}")
+        @ui.error("#{stderr_file}:  #{stderr}")
+        raise VagrantPlugins::G5K::Errors::JobError
+      end
+
+      def check_job(job_id)
+        @oar_driver.check_job(job_id)
+      end
+
+      def check_net(job_id)
+        @net_driver.check_state(job_id)
+      end
+
+      def vm_ssh_info(vmid)
+        @net_driver.vm_ssh_info(vmid)
+      end
+
+
+      def delete_job(job_id)
+        @ui.info("Soft deleting the associated job")
+        begin
+          @oar_driver.delete_job(job_id, ["-c", "-s 12"])
+        rescue VagrantPlugins::G5K::Errors::CommandError
+          @logger.debug "Checkpointing failed, sending hard deletion"
+          @ui.warn("Soft delete failed : proceeding to hard delete")
+          @oar_driver.delete_job(job_id)
+        ensure
+          @net_driver.detach()
+        end
+      end
+
+      def check_local_storage(env)
+        # Is the disk image already here ?
+        if @image[:pool].nil?
+          file = _check_file_local_storage(env)
+        else
+          file = _check_rbd_local_storage(env)
+        end
+        return file if file != ""
+        return nil
+      end
+
+      def _check_file_local_storage(env)
+        strategy = @image[:backing]
+        file_to_check = ""
+        if [STRATEGY_SNAPSHOT, STRATEGY_DIRECT].include?(strategy)
+          file_to_check = @image[:path]
+        else
+          file_to_check = File.join(cwd(), env[:machine].name.to_s)
+        end
+          exec("[ -f \"#{file_to_check}\" ] && echo #{file_to_check} || echo \"\"")
+      end
+  
+      def _check_rbd_local_storage(env)
+        strategy = @image[:backing]
+        file_to_check = ""
+        if [STRATEGY_SNAPSHOT, STRATEGY_DIRECT].include?(strategy)
+          file_to_check = @image[:rbd]
+        else
+          file_to_check = File.join(cwd(), env[:machine].name.to_s)
+        end
+        exec("(rbd --pool #{@image[:pool]} --id #{@image[:id]} --conf #{@image[:conf]} ls | grep \"^#{file_to_check}\") || echo \"\"")
+      end
+
+
+      def launch_vm(env)
+        launcher_path = File.join(File.dirname(__FILE__), LAUNCHER_SCRIPT)
+        @ui.info("Launching the VM on #{@site}")
+        # Checking the subnet job
+        # uploading the launcher
+        launcher_remote_path = File.join(cwd(), File.basename(LAUNCHER_SCRIPT))
+        upload(launcher_path, launcher_remote_path)
+
+        # Generate partial arguments for the kvm command
+        # NOTE: net is first due the the shape of the bridge launcher script
+        net = @net_driver.generate_net()
+        drive = _generate_drive(env)
+        
+        args = [net, drive].join(" ")
+        # Submitting a new job
+        # Getting the job_id as a ruby string
+        options = [
+          "-t allow_classic_ssh",
+          "-l \"#{@oar}nodes=1, walltime=#{@walltime}\"",
+          "--name #{env[:machine].name}",
+          "--checkpoint 60",
+          "--signal 12"
+        ]
+        job_id = @oar_driver.submit_job("#{launcher_remote_path} #{args}", options)
+        # saving the id asap
+        env[:machine].id = job_id
+        wait_for_vm(job_id)
+      end
+     
+      def wait_for_vm(job_id)
+        @oar_driver.wait_for(job_id)
+        @net_driver.attach()
+        @ui.info("ready @#{@site}")
+      end
+
+
+      def delete_disk(env)
+        if [STRATEGY_DIRECT, STRATEGY_SNAPSHOT].include?(@image[:backing])
+          @ui.error("Destroy not support for the strategy #{@image[:backing]}")
+          return
+        end
+
+        if @image[:pool].nil?
+          disk = File.join(cwd(), env[:machine].name.to_s)
+          exec("rm -f #{disk}")
+        else
+          disk = File.join(@image[:pool], cwd(), env[:machine].name.to_s)
+          begin
+            retryable(:on => VagrantPlugins::G5K::Errors::CommandError, :tries => 10, :sleep => 5) do
+              exec("rbd rm  #{disk} --conf #{@image[:conf]} --id #{@image[:id]}" )
+              break
+            end
+          rescue VagrantPlugins::G5K::Errors::CommandError
+            @ui.error("Reach max attempt while trying to remove the rbd")
+            raise VagrantPlugins::G5K::Errors::CommandError
+          end
+        end
+      end
+
+      def exec(cmd)
+        @driver.exec(cmd)
+      end
+
+      def upload(src, dst)
+        @driver.upload(src, dst)
+      end
+
+      def _generate_drive(env)
+        # Depending on the strategy we generate the file location
+        # This code smells a bit better 
+        file = ""
+        snapshot = ""
+        if @image[:backing] == STRATEGY_SNAPSHOT
+          snapshot = "-snapshot"
+        end
+
+        if @image[:pool].nil?
+          file = _generate_drive_local(env)
+        else
+          file = _generate_drive_rbd(env)
+        end
+      
+        return "-drive file=#{file},if=virtio #{snapshot}"
+      end
+
+      def _generate_drive_rbd(env)
+        strategy = @image[:backing]
+        @logger.debug(@image)
+        if [STRATEGY_SNAPSHOT, STRATEGY_DIRECT].include?(strategy)
+          @logger.debug(@image)
+          file = File.join(@image[:pool], @image[:rbd])
+          @logger.debug(file)
+        elsif strategy == STRATEGY_COW
+          file = _rbd_clone_or_copy_image(env, clone = true)
+        elsif strategy == STRATEGY_COPY
+          file = _rbd_clone_or_copy_image(env, clone = false)
+        end
+        # encapsulate the file to a qemu ready disk description
+        file = "rbd:#{file}:id=#{@image[:id]}:conf=#{@image[:conf]}:rbd_cache=true,cache=writeback"
+        @logger.debug("Generated drive string : #{file}")
+        return file
+      end
+
+      def _generate_drive_local(env)
+        strategy = @image[:backing]
+        if [STRATEGY_SNAPSHOT, STRATEGY_DIRECT].include?(strategy)
+          file = @image[:path]
+        elsif strategy == STRATEGY_COW
+          file = _file_clone_or_copy_image(env, clone = true)
+        elsif strategy == STRATEGY_COPY
+          file = _file_clone_or_copy_image(env, clone = false)
+        end
+        return file
+      end
+
+      def _rbd_clone_or_copy_image(env, clone = true)
+        # destination in the same pool under the .vagrant ns
+        destination = File.join(@image[:pool], cwd(), env[:machine].name.to_s)
+        # Even if nothing bad will happen when the destination already exist, we should test it before
+        exists = _check_rbd_local_storage(env)
+        if exists == ""
+          # we create the destination
+          if clone
+            # parent = pool/rbd@snap
+            @ui.info("Cloning the rbd image")
+            parent = File.join(@image[:pool], "#{@image[:rbd]}@#{@image[:snapshot]}")
+            exec("rbd clone #{parent} #{destination} --conf #{@image[:conf]} --id #{@image[:id]}" )
+          else
+            @ui.info("Copying the rbd image (This may take some time)")
+            # parent = pool/rbd@snap
+            parent = File.join(@image[:pool], "#{@image[:rbd]}")
+            exec("rbd cp #{parent} #{destination} --conf #{@image[:conf]} --id #{@image[:id]}" )
+          end
+        end
+        return destination
+      end
+      
+      def _file_clone_or_copy_image(env, clone = true)
+          @ui.info("Clone the file image")
+          file = File.join(cwd(), env[:machine].name.to_s)
+          exists = _check_file_local_storage(env)
+          if exists == ""
+            if clone 
+              exec("qemu-img create -f qcow2 -b #{@image[:path]} #{file}")
+            else
+              exec("cp #{@image[:path]} #{file}")
+            end
+          end
+          return file
+      end
+
+
+    end
+  end
+end
+

@@ -1,6 +1,9 @@
 require "log4r"
-require "vagrant-g5k/util/g5k_utils"
+require "vagrant-g5k/g5k_connection"
 require "vagrant-g5k/driver"
+require "vagrant-g5k/oar"
+require "vagrant-g5k/network/nat"
+require "vagrant-g5k/network/bridge"
 require 'thread'
 
 
@@ -23,7 +26,10 @@ module VagrantPlugins
 
         def call(env)
           driver = _get_driver(env)
-          env[:g5k_connection] = Connection.new(env, driver)
+          oar_driver = VagrantPlugins::G5K::Oar.new(env[:ui], driver)
+          net_type = env[:machine].provider_config.net[:type]
+          net_driver = Object.const_get("VagrantPlugins::G5K::Network::#{net_type.capitalize}").new(env, driver, oar_driver)
+          env[:g5k_connection] = Connection.new(env, driver, oar_driver, net_driver)
           @app.call(env)
         end
 
