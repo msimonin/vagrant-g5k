@@ -1,3 +1,7 @@
+# 0.9.2
+
+  * Current
+
 # 0.9.1
 
   * Allow custom cpu and memory demands.
