@@ -51,8 +51,8 @@ The outside world can access the VMs on dedicated ports that are mapped in the h
 config.vm.provider "g5k" do |g5k|
   [...]
   g5k.net = {
-    "type": "nat",
-    "ports": ["2222-:22", "8080-":80]
+    :type  => "nat",
+    :ports => ["2222-:22", "8080-":80]
   }
 end
 ```
@@ -65,12 +65,27 @@ e.g : Assuming `parapluie-1.rennes.grid5000.fr` hosts the VM. A SSH tunnel from 
 config.vm.provider "g5k" do |g5k|
   [...]
   g5k.net = {
-    "type": "bridge"
+    :type => "bridge"
   }
 end
 ```
 
 > Due to the dynamic nature of the subnet reserved on Grid'5000, IPs of the VMs will change accross reboots
+
+## Note on resource demand
+
+CPU and memory demand can be ajusted with the following in your Vagrantfile.
+
+```
+config.vm.provider "g5k" do |g5k|
+  [...]
+  g5k.resource = {
+    :cpu => 2,
+    :mem => 4096
+  }
+end
+```
+You can use `:cpu => -1` to express that you want all the cpu of the reserved node (but not necesseraly all the memory). Similarly `:mem => -1` will give you all the memory available on the reserved node. These are the default values.
 
 
 ## Supported operations
