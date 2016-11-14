@@ -1,6 +1,9 @@
-# 0.0.19
+# 0.9.0
 
-  * Current
+  * Code refactoring : 
+    * Introduce oar_driver to handle operation involving oar
+    * Introduce net_driver to configure the network used by the VMs
+    * Introduce disk_driver to configure the disk used by the VMs
 
 # 0.0.18
 
