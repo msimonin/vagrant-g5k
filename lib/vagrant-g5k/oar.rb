@@ -56,7 +56,7 @@ module VagrantPlugins
           retryable(:on => VagrantPlugins::G5K::Errors::JobNotRunning, :tries => 100, :sleep => 1) do
             job = check_job(job_id)
             if !job.nil? and ["Error", "Terminated"].include?(job["state"])
-              process_errors(job_id)
+              _process_errors(job_id)
             end
             if job.nil? or (!job.nil? and job["state"] != "Running")
               @ui.info("Waiting for the job to be running")
@@ -74,6 +74,15 @@ module VagrantPlugins
       def _build_oar_cmd(options)
         options.join(" ")
       end
+
+      def _process_errors(job_id)
+        job = check_job(job_id)
+        stderr_file = job["stderr_file"]
+        stderr = exec("cat #{stderr_file}")
+        @ui.error("#{stderr_file}:  #{stderr}")
+        raise VagrantPlugins::G5K::Errors::JobError
+      end
+
 
     end
   end

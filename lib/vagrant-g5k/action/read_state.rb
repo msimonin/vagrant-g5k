@@ -20,7 +20,7 @@ module VagrantPlugins
           machine = env[:machine]
           conn = env[:g5k_connection]
           id = machine.id
-          local_storage = conn.check_local_storage(env)
+          local_storage = conn.check_storage(env)
           if id.nil? and local_storage.nil?
             return :not_created
           end
