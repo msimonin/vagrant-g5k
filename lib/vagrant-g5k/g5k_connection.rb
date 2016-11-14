@@ -28,12 +28,22 @@ module VagrantPlugins
         @walltime = @provider_config.walltime
         @image= @provider_config.image
         @oar = "{#{@provider_config.oar}}/" if @provider_config.oar != ""
-
+        @resources = @provider_config.resources
+        @oar_unit = init_oar_unit(@resources[:cpu], @resources[:mem])
         @cwd = cwd
         @driver = driver
         @oar_driver = oar_driver
         @net_driver = net_driver
         @disk_driver = disk_driver
+      end
+
+      def init_oar_unit(cpu, mem)
+        if cpu != -1 and mem != -1
+          unit = "core=#{cpu}"
+        else
+          unit = "nodes=1"
+        end
+        return unit
       end
 
 
@@ -86,12 +96,19 @@ module VagrantPlugins
         net = @net_driver.generate_net()
         drive = _generate_drive(env)
         
-        args = [net, drive].join(" ")
+        args = [@resources[:cpu], @resources[:mem], net, drive].join(" ")
         # Submitting a new job
         # Getting the job_id as a ruby string
+        options = []
+
+        if @oar_unit =~ /core/
+          # allow classic ssh only work when the node is reserved as a whole
+          # this implies that nat networking won't work when core is the unit of
+          # deployment
+          options << '-t allow_classic_ssh'
+        end
         options = [
-          "-t allow_classic_ssh",
-          "-l \"#{@oar}nodes=1, walltime=#{@walltime}\"",
+          "-l \"#{@oar}#{@oar_unit}, walltime=#{@walltime}\"",
           "--name #{env[:machine].name}",
           "--checkpoint 60",
           "--signal 12"

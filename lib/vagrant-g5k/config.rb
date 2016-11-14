@@ -52,6 +52,12 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :oar
 
+      # VM resource demand
+      #
+      #
+      # @return [Hash]
+      attr_accessor :resources
+
       def initialize()
         @username         = ENV['USER']
         @project_id       = nil
@@ -60,13 +66,19 @@ module VagrantPlugins
         @walltime         = "01:00:00"
         @oar              = ""
         @net              = {
-          :type => 'nat',
-          :ports => ['2222-:22']
+          :type => 'nat'
+        }
+        @resources        = {
         }
       end
 
       def finalize!()
-        # This is call by the plugin mecanism after initialize
+        # set default ssh redirection
+        if @net[:type] == 'nat' && @net[:ports].nil?
+          @net[:ports] = ["2222-:22"]
+        end
+        @resources[:cpu] = -1 if @resources[:cpu].nil?
+        @resources[:mem] = -1 if @resources[:mem].nil?
       end
 
 
@@ -78,6 +90,7 @@ module VagrantPlugins
         errors << "g5k image is required" if @image.nil?
         errors << "g5k image must be a Hash" if !@image.is_a?(Hash)
         errors << "g5k net must be a Hash" if !@net.is_a?(Hash)
+        errors << "g5k resources must be a Hash" if !@resources.is_a?(Hash)
 
         { "G5K Provider" => errors }
       end

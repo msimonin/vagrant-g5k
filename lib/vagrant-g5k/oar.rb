@@ -78,7 +78,7 @@ module VagrantPlugins
       def _process_errors(job_id)
         job = check_job(job_id)
         stderr_file = job["stderr_file"]
-        stderr = exec("cat #{stderr_file}")
+        stderr = @driver.exec("cat #{stderr_file}")
         @ui.error("#{stderr_file}:  #{stderr}")
         raise VagrantPlugins::G5K::Errors::JobError
       end

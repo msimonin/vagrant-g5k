@@ -1,6 +1,6 @@
 # 0.9.1
 
-  * Current
+  * Allow custom cpu and memory demands.
 
 # 0.9.0
 
