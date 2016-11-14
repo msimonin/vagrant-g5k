@@ -1,3 +1,5 @@
+> The plugin is updated often, this may include breaking changes.
+
 # Vagrant G5K Provider
 This is a [Vagrant](http://www.vagrantup.com) 1.2+ plugin that adds an [G5K](https://www.grid5000.fr)
 provider to Vagrant, allowing Vagrant to control and provision **virtual machines** on Grid5000.
