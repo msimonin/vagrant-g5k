@@ -20,7 +20,7 @@ module VagrantPlugins
           machine = env[:machine]
           conn = env[:g5k_connection]
           id = machine.id
-          local_storage = conn.check_local_storage(env)
+          local_storage = conn.check_storage(env)
           if id.nil? and local_storage.nil?
             return :not_created
           end
@@ -35,13 +35,9 @@ module VagrantPlugins
             if job.nil?
               return :not_created
             end
-            if env[:machine].provider_config.net["type"] == "bridge"
-              # is the subnet still there ?
-              subnet_id = conn._find_subnet(id)
-              if subnet_id.nil?
-                return :subnet_missing
-              end
-            end
+            
+            net_state = conn.check_net(id)
+            return net_state.to_sym unless net_state.nil?
 
             return job["state"].to_sym
           end

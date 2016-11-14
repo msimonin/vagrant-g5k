@@ -26,8 +26,6 @@ module VagrantPlugins
         Vagrant::Action::Builder.new.tap do |b|
           b.use ConfigValidate
           b.use ConnectG5K
-          # read the state to find the enclosing ressource
-          b.use ReadState
           b.use ReadSSHInfo
         end
       end
@@ -144,7 +142,6 @@ module VagrantPlugins
 
       action_root = Pathname.new(File.expand_path("../action", __FILE__))
       autoload :ConnectG5K, action_root.join("connect_g5k")
-      autoload :CloseG5K, action_root.join("close_g5k")
       autoload :CreateLocalWorkingDir, action_root.join("create_local_working_dir")
       autoload :DeleteJob, action_root.join("delete_job")
       autoload :DeleteDisk, action_root.join("delete_disk")

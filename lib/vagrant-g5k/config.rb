@@ -60,8 +60,8 @@ module VagrantPlugins
         @walltime         = "01:00:00"
         @oar              = ""
         @net              = {
-          'type' => 'nat',
-          'ports' => ['2222-:22']
+          :type => 'nat',
+          :ports => ['2222-:22']
         }
       end
 

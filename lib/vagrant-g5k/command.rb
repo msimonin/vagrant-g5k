@@ -1,5 +1,5 @@
 require 'net/ssh/multi'
-require 'vagrant-g5k/util/g5k_utils'
+require 'vagrant-g5k/util/g5k_connection'
 include Process
 
 module VagrantPlugins
@@ -15,7 +15,7 @@ module VagrantPlugins
         # TODO
         options = {}
         opts = OptionParser.new do |o|
-          o.banner = 'Usage: vagrant g(k [vm-name]'
+          o.banner = 'Usage: vagrant g5k [vm-name]'
           o.separator ''
           o.version = VagrantPlugins::G5K::VERSION
           o.program_name = 'vagrant g5k'
