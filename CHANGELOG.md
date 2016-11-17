@@ -1,3 +1,7 @@
+# 0.9.3
+
+  * Current
+
 # 0.9.2
 
   * Make the monitor socket location unique
