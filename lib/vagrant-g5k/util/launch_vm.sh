@@ -79,7 +79,7 @@ clean_shutdown() {
 trap clean_shutdown 12
 
 # Launch virtual machine
-kvm -m $VM_MEM -smp cores=$SMP,threads=1,sockets=1 -fsdev local,security_model=none,id=fsdev0,path=$HOME -device virtio-9p-pci,id=fs0,fsdev=fsdev0,mount_tag=hostshare -nographic -monitor unix:/tmp/vagrant-g5k.mon,server,nowait -localtime -enable-kvm $net $@ &
+kvm -m $VM_MEM -smp cores=$SMP,threads=1,sockets=1 -fsdev local,security_model=none,id=fsdev0,path=$HOME -device virtio-9p-pci,id=fs0,fsdev=fsdev0,mount_tag=hostshare -nographic -monitor unix:/tmp/vagrant-g5k.$OAR_JOB_ID.mon,server,nowait -localtime -enable-kvm $net $@ &
 
 wait
 
