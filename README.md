@@ -22,6 +22,13 @@ $ vagrant plugin install vagrant-g5k
 $ vagrant up --provider=g5k
 ...
 ```
+Vagrant requires a box to start with. As a consequence you can add one `dummy` box with the following command :
+
+```
+ vagrant box add dummy https://github.com/msimonin/vagrant-g5k/raw/master/dummy.box
+```
+
+
 ## Configuration
 
 Check the Vagrantfile.
