@@ -100,6 +100,7 @@ You can use `:cpu => -1` to express that you want all the cpu of the reserved no
 * `vagrant destroy`
 * `vagrant halt`
 * `vagrant provision`
+* `vagrant rsync|rsync-auto`
 * `vagrant ssh`
 * `vagrant ssh-config`
 * `vagrant status`

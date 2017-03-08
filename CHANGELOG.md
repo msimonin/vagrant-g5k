@@ -1,6 +1,6 @@
 # 0.9.3
 
-  * Current
+  * Rsync support
 
 # 0.9.2
 

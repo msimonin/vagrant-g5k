@@ -17,7 +17,7 @@ Vagrant.configure(2) do |config|
 
       # Image backed on the frontend filesystem
       g5k.image = {
-        :path    => "/grid5000/virt-images/alpine_docker.qcow2",
+        :path    => "/home/msimonin/public/ubuntu1404.qcow2",
         :backing => "snapshot"
       }
 
@@ -55,14 +55,9 @@ Vagrant.configure(2) do |config|
     ## * loop over using (1..N).each block
     config.vm.define "exp5" do |my|
       my.vm.box = "dummy"
-
-      ## Access to the vm
-      ## This is specific to alpine_docker
-      ## It's better to use a vagrant image
-      ## converted to qcow2
-      #my.ssh.username = "root"
-      #my.ssh.password = ""
-
+      my.vm.synced_folder ".", "/vagrant", type: "rsync"
+      # This is mandatory until #6 is fixed
+      my.ssh.insert_key = false
     end #vm
 
 end

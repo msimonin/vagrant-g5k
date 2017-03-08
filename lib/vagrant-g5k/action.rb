@@ -77,6 +77,7 @@ module VagrantPlugins
               b1.use ConnectG5K
               b1.use CreateLocalWorkingDir
               b1.use RunInstance # launch a new instance
+              b1.use SyncedFolders
             end
           end
         end
