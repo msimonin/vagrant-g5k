@@ -42,7 +42,7 @@ module VagrantPlugins
           ports = @net[:ports]
           ssh_fwd = ports.select{ |x| x.split(':')[1] == '22'}.first
           if ssh_fwd.nil?
-            env[:ui].error "SSH port 22 must be forwarded"
+            @env[:ui].error "SSH port 22 must be forwarded"
             raise Error "SSh port 22 isn't forwarded"
           end
           ssh_fwd = ssh_fwd.split('-:')[0]

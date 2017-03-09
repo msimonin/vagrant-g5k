@@ -43,7 +43,7 @@ module VagrantPlugins
           @logger.debug("Returning #{stdout}")
         }
         stdout
- 
+
       end
 
       def upload(src, dst)

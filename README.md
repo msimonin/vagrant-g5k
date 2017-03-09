@@ -33,6 +33,13 @@ Vagrant requires a box to start with. As a consequence you can add one `dummy` b
 
 Check the Vagrantfile.
 
+## Note on shared folders
+
+Rsync shared folders are supported. The copy of your local files is hooked in the `up` phase. After this you can use :
+
+* `vagrant rsync` to force a synchronization
+* `vagrant rsync-auto` to watch your local modifications
+
 ## Note on disk format and backing strategy
 
 Virtual Machines can be booted either :

@@ -1,6 +1,6 @@
-# 0.9.3
+# 0.9.3 (not released)
 
-  * Rsync support
+  * Rsync support. The Vagrantfile needs to be updated.
 
 # 0.9.2
 
@@ -12,7 +12,7 @@
 
 # 0.9.0
 
-  * Code refactoring : 
+  * Code refactoring :
     * Introduce oar_driver to handle operation involving oar
     * Introduce net_driver to configure the network used by the VMs
     * Introduce disk_driver to configure the disk used by the VMs
@@ -78,7 +78,7 @@
   * SSH ports has to be forwarded explicitly
 
 # 0.0.5
-  
+
   * Add destroy command
   * Remove vmlist command
 

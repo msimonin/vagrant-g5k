@@ -16,7 +16,7 @@ module VagrantPlugins
         return Action.send(action_method) if Action.respond_to?(action_method)
         nil
       end
-      
+
       def ssh_info
         # Run a custom action called "read_ssh_info" which does what it
         # says and puts the resulting SSH info into the `:machine_ssh_info`
