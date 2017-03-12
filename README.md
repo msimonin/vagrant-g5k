@@ -33,6 +33,15 @@ Vagrant requires a box to start with. As a consequence you can add one `dummy` b
 
 Check the Vagrantfile.
 
+## Note on the insecure vagrant key
+
+By default, Vagrant uses a insecure key to connect to the VM.
+Prior to some operation vagrant will replace this by a generated key.
+This operation isn't supported by vagrant-g5k thus you need to specify
+`config.vmssh.insert_key = false` in the Vagrantfile.
+
+For instance this is needed when using shared folders, hostmanager plugin.
+
 ## Note on shared folders
 
 Rsync shared folders are supported. The copy of your local files is hooked in the `up` phase. After this you can use :
