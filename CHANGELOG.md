@@ -1,4 +1,4 @@
-# 0.9.3 (not released)
+# 0.9.3 
 
   * Rsync support. The Vagrantfile needs to be updated.
 
