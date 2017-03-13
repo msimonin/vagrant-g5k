@@ -16,12 +16,11 @@ Vagrant.configure(2) do |config|
       #g5k.site = "igrida"
       g5k.site = "rennes"
       g5k.username = "msimonin"
-       g5k.gateway = "access.grid5000.fr"
+      g5k.gateway = "access.grid5000.fr"
       g5k.walltime = "00:10:00"
 
       # Image backed on the frontend filesystem
       g5k.image = {
-      #  :path    => "/udd/msimonin/precise.qcow2",
         :path    => "/home/msimonin/public/ubuntu1404-9p.qcow2",
         :backing => "snapshot"
       }
@@ -59,7 +58,7 @@ Vagrant.configure(2) do |config|
     ## To define multiple VMs you can
     ## * either repeat the block
     ## * loop over using (1..N).each block
-    config.vm.define "exp5" do |my|
+    config.vm.define "test" do |my|
       my.vm.box = "dummy"
       ## Configure the shared folders between your host and the VM
       my.vm.synced_folder ".", "/vagrant", type: "rsync", disabled: false

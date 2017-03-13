@@ -18,7 +18,8 @@ shown below.
 
 ```
 $ vagrant plugin install vagrant-g5k
-...
+$ # (optionnally) get the latest Vagrantfile
+$ wget https://raw.githubusercontent.com/msimonin/vagrant-g5k/master/Vagrantfile
 $ vagrant up --provider=g5k
 ...
 ```
