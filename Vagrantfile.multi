@@ -5,6 +5,27 @@
 #
 Vagrant.configure(2) do |config|
 
+      config.vm.provider "g5k" do |g5k, override|
+        override.nfs.functional = false
+        g5k.project_id = "test-vagrant-g5k"
+        g5k.site = "rennes"
+        g5k.username = "msimonin"
+        g5k.gateway = "access.grid5000.fr"
+        g5k.walltime = "00:10:00"
+        g5k.image = {
+          :path    => "/home/msimonin/public/ubuntu1404-9p.qcow2",
+          :backing => "snapshot"
+        }
+        g5k.net = {
+          :type => "bridge",
+#            :ports => ["#{2222+i}-:22"]
+        }
+        g5k.oar = "virtual != 'none'"
+        g5k.resources = {
+          :cpu => 1,
+          :mem => 2048
+        }
+      end #g5k
 
     ## This define a VM.
     ## a g5k provider section will override top level options
@@ -19,28 +40,6 @@ Vagrant.configure(2) do |config|
         ## This is mandatory until #6 is fixed
         ## In particular this is needed for the shared folders
         my.ssh.insert_key = false
-        my.vm.provider "g5k" do |g5k, override|
-          override.nfs.functional = false
-          g5k.project_id = "test-vagrant-g5k"
-          g5k.site = "rennes"
-          g5k.username = "msimonin"
-          g5k.gateway = "access.grid5000.fr"
-          g5k.walltime = "00:10:00"
-          g5k.image = {
-            :path    => "/home/msimonin/public/ubuntu1404-9p.qcow2",
-            :backing => "snapshot"
-          }
-          g5k.net = {
-            :type => "bridge",
-#            :ports => ["#{2222+i}-:22"]
-          }
-          g5k.oar = "virtual != 'none'"
-          g5k.resources = {
-            :cpu => 1,
-            :mem => 2048
-          }
-        end #g5k
-
       end #vm
     end
 
