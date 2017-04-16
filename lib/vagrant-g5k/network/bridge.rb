@@ -5,7 +5,7 @@ module VagrantPlugins
     module Network
 
       class Bridge
-      
+
         include VagrantPlugins::G5K
 
         def initialize(env, driver, oar_driver)
@@ -21,7 +21,7 @@ module VagrantPlugins
         def generate_net()
           lockable(:lock => VagrantPlugins::G5K.subnet_lock) do
             subnet_job_id = _find_subnet
-            if subnet_job_id.nil? 
+            if subnet_job_id.nil?
               subnet_job_id = _create_subnet
               @oar_driver.wait_for(subnet_job_id)
               # we can't call this inside the launcher script
@@ -33,7 +33,7 @@ module VagrantPlugins
           return "BRIDGE #{_subnet_file}"
           end
         end
-      
+
         def check_state(job_id)
           subnet_job_id = _find_subnet()
           return :subnet_missing if subnet_job_id.nil?
@@ -69,7 +69,7 @@ module VagrantPlugins
         def _create_subnet()
           options = []
           options << "--name '#{@project_id}-net'"
-          options << "-l 'slash_22=1, walltime=#{@walltime}'"
+          options << "-l 'slash_18=1, walltime=#{@walltime}'"
           @oar_driver.submit_job('sleep 84400', options )
         end
 
@@ -87,10 +87,10 @@ module VagrantPlugins
           nil
         end
 
-        # Update the subnet use 
+        # Update the subnet use
         # op is a string "+" or "-"
-        # if after the update the subnet use is 0 
-        # the subnet in use is also deleted 
+        # if after the update the subnet use is 0
+        # the subnet in use is also deleted
         def _update_subnet_use(op)
           cmd = []
           cmd << "c=$(cat #{_subnet_count});"
@@ -98,7 +98,7 @@ module VagrantPlugins
           cmd << "cat #{_subnet_count}"
           count = @driver.exec(cmd.join(" "))
           @logger.info("subnet_count = #{count}")
-          if count.to_i <= 0 
+          if count.to_i <= 0
             @logger.info("deleteting the associated subnet")
             subnet_id = _find_subnet()
             @oar_driver.delete_job(subnet_id)
@@ -111,5 +111,3 @@ module VagrantPlugins
     end
   end
 end
-
-  

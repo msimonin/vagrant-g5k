@@ -2,7 +2,7 @@
 
 # This script is originally borrowed to pmorillo
 # Thanks to him !
-# I've made some addition though :) 
+# I've made some addition though :)
 
 # ARGS
 # $1: cpu demand
@@ -17,7 +17,7 @@ set -x
 function net_bridge() {
   SUBNET_FILE=$1
   # As we chose a stateless designe,let's calculate here the ip and mac
-  # assuming we got a slash_22
+  # assuming we got at least a slash_22
   ipnumber=$(($OAR_JOB_ID % 1022))
   IP_MAC=$(cat $SUBNET_FILE|head -n $((ipnumber + 1))|tail -n 1)
   IP_ADDR=$(echo $IP_MAC|awk '{print $1}')

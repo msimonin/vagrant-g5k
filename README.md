@@ -95,6 +95,7 @@ end
 ```
 
 > Due to the dynamic nature of the subnet reserved on Grid'5000, IPs of the VMs will change accross reboots
+> a /18 is reserved but only the first 1024 ips are reserved for the VMs. That means you can use the remaining ips without any conflict.
 
 ## Note on resource demand
 
