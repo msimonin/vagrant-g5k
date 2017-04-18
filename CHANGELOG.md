@@ -1,6 +1,7 @@
 # 0.9.5 (unreleased)
 
   * Fix import error on command
+  * bridge mode now reserves a /18 and take ips in the first 1024 ips.
 
 # 0.9.4
 
