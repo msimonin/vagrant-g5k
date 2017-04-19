@@ -1,0 +1,40 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+NB=3
+Vagrant.configure(2) do |config|
+    (0..NB-1).each do |i|
+      config.vm.define "netem#{i}" do |my|
+        my.vm.box = "dummy"
+        my.vm.synced_folder ".", "/vagrant", type: "rsync", disabled: true
+        my.ssh.insert_key = false
+
+        my.vm.provider "g5k" do |g5k, override|
+		      override.nfs.functional = false
+          g5k.project_id = "poc-netem"
+          g5k.site = "rennes"
+          g5k.username = ENV['USER']
+          g5k.gateway = "access.grid5000.fr"
+          g5k.walltime = "02:00:00"
+
+          g5k.image = {
+            :path    => "public/ubuntu1404-9p.qcow2",
+            :backing => "snapshot"
+          }
+
+          g5k.net = {
+            :type => "bridge"
+          }
+
+          g5k.oar = "virtual != 'None'"
+          g5k.resources = {
+            :cpu => 2,
+            :mem => 2048
+          }
+        end #g5k
+
+      end
+
+    end
+end
