@@ -6,7 +6,11 @@
 Vagrant.configure(2) do |config|
 
       config.vm.provider "g5k" do |g5k, override|
+        # some overrides
         override.nfs.functional = false
+        override.vm.synced_folder ".", "/vagrant", type: "rsync", disabled: false
+        override.ssh.insert_key = false
+
         g5k.project_id = "test-vagrant-g5k"
         g5k.site = "rennes"
         g5k.username = "msimonin"
@@ -18,7 +22,6 @@ Vagrant.configure(2) do |config|
         }
         g5k.net = {
           :type => "bridge",
-#            :ports => ["#{2222+i}-:22"]
         }
         g5k.oar = "virtual != 'none'"
         g5k.resources = {
@@ -27,19 +30,9 @@ Vagrant.configure(2) do |config|
         }
       end #g5k
 
-    ## This define a VM.
-    ## a g5k provider section will override top level options
-    ## To define multiple VMs you can
-    ## * either repeat the block
-    ## * loop over using (1..N).each block
     (1..3).each do |i|
       config.vm.define "test-#{i}" do |my|
         my.vm.box = "dummy"
-        ## Configure the shared folders between your host and the VM
-        my.vm.synced_folder ".", "/vagrant", type: "rsync", disabled: false
-        ## This is mandatory until #6 is fixed
-        ## In particular this is needed for the shared folders
-        my.ssh.insert_key = false
       end #vm
     end
 

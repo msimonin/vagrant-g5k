@@ -8,6 +8,10 @@ Vagrant.configure(2) do |config|
     config.vm.provider "g5k" do |g5k, override|
       # This is mandatory for the shared folders to work correctly
       override.nfs.functional = false
+      # vagrant-g5k only supports rsync shared folders
+      override.vm.synced_folder ".", "/vagrant", type: "rsync", disabled: false
+
+      override.ssh.insert_key = false
       # project id must be unique accross all
       # your projects using vagrant-g5k to avoid conflict
       # on vm disks
@@ -54,19 +58,11 @@ Vagrant.configure(2) do |config|
       }
     end #g5k
 
-    ## This define a VM.
-    ## a g5k provider section will override top level options
-    ## To define multiple VMs you can
-    ## * either repeat the block
-    ## * loop over using (1..N).each block
+    # This defines a VM
+    # If you want to use a local virtual machine (vbox, libvirt...)
+    # add your vagrant options below as usual.
     config.vm.define "test" do |my|
       my.vm.box = "dummy"
-      ## Configure the shared folders between your host and the VM
-      my.vm.synced_folder ".", "/vagrant", type: "rsync", disabled: false
-      ## This is mandatory until #6 is fixed
-      ## In particular this is needed for the shared folders
-      my.ssh.insert_key = false
-
-    end #vm
+    end
 
 end
