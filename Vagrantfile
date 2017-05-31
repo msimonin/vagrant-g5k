@@ -3,6 +3,13 @@
 #
 # Sample Vagrantfile
 #
+
+# Allow to mount the home directory of G5k inside the VM
+$script = <<SCRIPT
+mkdir /g5k
+mount -t 9p -o trans=virtio hostshare /g5k -oversion=9p2000.L
+SCRIPT
+
 Vagrant.configure(2) do |config|
 
     config.vm.provider "g5k" do |g5k, override|
@@ -12,6 +19,9 @@ Vagrant.configure(2) do |config|
       override.vm.synced_folder ".", "/vagrant", type: "rsync", disabled: false
 
       override.ssh.insert_key = false
+
+      # Mount the home dir
+      override.vm.provision "shell", inline: $script
       # project id must be unique accross all
       # your projects using vagrant-g5k to avoid conflict
       # on vm disks
@@ -26,7 +36,7 @@ Vagrant.configure(2) do |config|
 
       # Image backed on the frontend filesystem
       g5k.image = {
-        :path    => "/home/msimonin/public/ubuntu1404-9p.qcow2",
+        :path    => "/home/msimonin/public/debian-8.7-amd64-bento.qcow2",
         :backing => "snapshot"
       }
 
@@ -56,6 +66,10 @@ Vagrant.configure(2) do |config|
         :cpu => 1,
         :mem => 2048
       }
+      ## Job container id
+      ## see https://www.grid5000.fr/mediawiki/index.php/Advanced_OAR#Container_jobs
+      # g5k.job_container_id = "907864"
+
     end #g5k
 
     # This defines a VM

@@ -41,16 +41,22 @@ module VagrantPlugins
 
 
       # G5K network options
-      # 
+      #
       #
       # @return [Hash]
       attr_accessor :net
 
       # OAR resource selection
-      # 
+      #
       #
       # @return [String]
       attr_accessor :oar
+
+      # OAR job container id
+      #
+      #
+      # @return [String]
+      attr_accessor :job_container_id
 
       # VM resource demand
       #
@@ -63,13 +69,14 @@ module VagrantPlugins
         @project_id       = nil
         @site             = nil
         @gateway          = nil
-        @walltime         = "01:00:00"
-        @oar              = ""
+        @walltime         = '01:00:00'
+        @oar              = ''
         @net              = {
           :type => 'nat'
         }
         @resources        = {
         }
+        @job_container_id = nil
       end
 
       def finalize!()
@@ -91,7 +98,6 @@ module VagrantPlugins
         errors << "g5k image must be a Hash" if !@image.is_a?(Hash)
         errors << "g5k net must be a Hash" if !@net.is_a?(Hash)
         errors << "g5k resources must be a Hash" if !@resources.is_a?(Hash)
-
         { "G5K Provider" => errors }
       end
 

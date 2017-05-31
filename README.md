@@ -1,13 +1,28 @@
 > The plugin is updated often, this may include breaking changes.
 
 # Vagrant G5K Provider
-This is a [Vagrant](http://www.vagrantup.com) 1.2+ plugin that adds an [G5K](https://www.grid5000.fr)
-provider to Vagrant, allowing Vagrant to control and provision **virtual machines** on Grid5000.
+This is a [Vagrant](http://www.vagrantup.com) 1.2+ plugin that adds an
+[G5K](https://www.grid5000.fr) provider to Vagrant, allowing Vagrant to control
+and provision **virtual machines** on Grid5000.
 
-More generally any *OAR behind ssh* that support launching `kvm` could be used (e.g [Igrida](http://igrida.gforge.inria.fr/)). Thus *vagrant-oar* could be a more appropriate name.
+More generally any *OAR behind ssh* that support launching `kvm` could be used
+(e.g [Igrida](http://igrida.gforge.inria.fr/)). Thus *vagrant-oar* could be a
+more appropriate name.
 
 > This plugin requires
   * Vagrant 1.2+,
+
+
+## Supported operations
+
+* `vagrant destroy`
+* `vagrant halt`
+* `vagrant provision`
+* `vagrant rsync|rsync-auto`
+* `vagrant ssh`
+* `vagrant ssh-config`
+* `vagrant status`
+* `vagrant up`
 
 
 ## Usage
@@ -23,7 +38,8 @@ $ wget https://raw.githubusercontent.com/msimonin/vagrant-g5k/master/Vagrantfile
 $ vagrant up --provider=g5k
 ...
 ```
-Vagrant requires a box to start with. As a consequence you can add one `dummy` box with the following command :
+Vagrant requires a box to start with. As a consequence you can add one `dummy`
+box with the following command :
 
 ```
  vagrant box add dummy https://github.com/msimonin/vagrant-g5k/raw/master/dummy.box
@@ -41,14 +57,28 @@ Prior to some operation vagrant will replace this by a generated key.
 This operation isn't supported by vagrant-g5k thus you need to specify
 `config.vmssh.insert_key = false` in the Vagrantfile.
 
-For instance this is needed when using shared folders, hostmanager plugin.
+For instance this is needed when using shared folders, hostmanager plugin...
 
 ## Note on shared folders
 
-Rsync shared folders are supported. The copy of your local files is hooked in the `up` phase. After this you can use :
+### Local files
+
+Rsync shared folders are supported. The copy of your local files is hooked in
+the `up` phase. After this you can use :
 
 * `vagrant rsync` to force a synchronization
 * `vagrant rsync-auto` to watch your local modifications
+
+### Grid5000 home
+
+Your home on Grid'5000 can be shared with your virtual machine through VirtFS.
+If the VM supports Plan 9 folder sharing you can connect to the VM and type :
+
+```
+mkdir /g5k
+mount -t 9p -o trans=virtio hostshare /g5k -oversion=9p2000.L
+```
+
 
 ## Note on disk format and backing strategy
 
@@ -60,8 +90,10 @@ Virtual Machines can be booted either :
 Once the base image is chosen, you can pick one of the following strategy
 to back the disk image of the virtual machines :
 
-* `copy`: will make a full copy of the image in your home directory (resp. in the same pool as the rbd)
-* `cow`: will create a Copy On write image in your home directory (resp. in the same pool as the rbd)
+* `copy`: will make a full copy of the image in your home directory (resp. in
+  the same pool as the rbd)
+* `cow`: will create a Copy On write image in your home directory (resp. in the
+  same pool as the rbd)
 * `direct`: will use the image directly (you'll need r/w access to the image)
 * `snapshot`: will let `kvm` create an ephemeral copy on write image.
 
@@ -69,8 +101,10 @@ to back the disk image of the virtual machines :
 
 Two networking modes are supported :
 
-* NAT networking. VMs traffic is NATed to the outside world.
-The outside world can access the VMs on dedicated ports that are mapped in the host of Grid'5000.
+* NAT networking. VMs traffic is NATed to the outside world.  The outside world
+  can access the VMs on dedicated ports that are mapped in the host of
+  Grid'5000.  
+
 ```
 config.vm.provider "g5k" do |g5k|
   [...]
@@ -81,9 +115,12 @@ config.vm.provider "g5k" do |g5k|
 end
 ```
 
-e.g : Assuming `parapluie-1.rennes.grid5000.fr` hosts the VM. A SSH tunnel from your local machine to `parapluie-1.rennes.grid5000.fr:8080` will be forwarded to the port `80` of the VM.
+e.g : Assuming `parapluie-1.rennes.grid5000.fr` hosts the VM. A SSH tunnel from
+your local machine to `parapluie-1.rennes.grid5000.fr:8080` will be forwarded to
+the port `80` of the VM.
 
-* Bridge networking. VMs are given an IP from a Grid'5000 subnet. They can thus communicate with each others using their IPs.
+* Bridge networking. VMs are given an IP from a Grid'5000 subnet. They can thus
+  communicate with each others using their IPs.
 
 ```
 config.vm.provider "g5k" do |g5k|
@@ -94,8 +131,10 @@ config.vm.provider "g5k" do |g5k|
 end
 ```
 
-> Due to the dynamic nature of the subnet reserved on Grid'5000, IPs of the VMs will change accross reboots
-> a /18 is reserved but only the first 1024 ips are reserved for the VMs. That means you can use the remaining ips without any conflict.
+> Due to the dynamic nature of the subnet reserved on Grid'5000, IPs of the VMs
+> will change accross reboots a /18 is reserved but only the first 1024 ips are
+> reserved for the VMs. That means you can use the remaining ips without any
+> conflict.
 
 ## Note on resource demand
 
@@ -110,19 +149,26 @@ config.vm.provider "g5k" do |g5k|
   }
 end
 ```
-You can use `:cpu => -1` to express that you want all the cpu of the reserved node (but not necesseraly all the memory). Similarly `:mem => -1` will give you all the memory available on the reserved node. These are the default values.
+You can use `:cpu => -1` to express that you want all the cpu of the reserved
+node (but not necesseraly all the memory). Similarly `:mem => -1` will give you
+all the memory available on the reserved node. These are the default values.
 
+## Reservation in advance
 
-## Supported operations
+If you plan to use a reservation or if you expect all your VMs to be ready
+almost on the same time you can use a job container (see:
+https://www.grid5000.fr/mediawiki/index.php/Advanced_OAR#Container_jobs)
 
-* `vagrant destroy`
-* `vagrant halt`
-* `vagrant provision`
-* `vagrant rsync|rsync-auto`
-* `vagrant ssh`
-* `vagrant ssh-config`
-* `vagrant status`
-* `vagrant up`
+* First create you container job using OAR cli from the fronted of your choice.
+* Then instruct vagrant-g5k about this job container id in the Vagrantfile :
+
+```
+config.vm.provider "g5k" do |g5k|
+  [...]
+  g5k.job_container_id = "your container job id"
+end
+```
+
 
 ## Use ceph as backing strategy
 

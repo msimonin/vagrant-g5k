@@ -23,13 +23,14 @@ module VagrantPlugins
         @logger = Log4r::Logger.new("vagrant::g5k_connection")
         @ui = env[:ui]
 
-        @provider_config = env[:machine].provider_config 
+        @provider_config = env[:machine].provider_config
         @site = @provider_config.site
         @walltime = @provider_config.walltime
         @image= @provider_config.image
         @oar = "{#{@provider_config.oar}}/" if @provider_config.oar != ""
         @resources = @provider_config.resources
         @oar_unit = init_oar_unit(@resources[:cpu], @resources[:mem])
+        @job_container_id = @provider_config.job_container_id
         @cwd = cwd
         @driver = driver
         @oar_driver = oar_driver
@@ -95,19 +96,15 @@ module VagrantPlugins
         # NOTE: net is first due the the shape of the bridge launcher script
         net = @net_driver.generate_net()
         drive = _generate_drive(env)
-        
         args = [@resources[:cpu], @resources[:mem], net, drive].join(" ")
         # Submitting a new job
         # Getting the job_id as a ruby string
         options = []
-
-        if @oar_unit =~ /core/
-          # allow classic ssh only work when the node is reserved as a whole
-          # this implies that nat networking won't work when core is the unit of
-          # deployment
-          options << '-t allow_classic_ssh'
+        if !@job_container_id.nil?
+          @ui.info("Using a job container = #{@job_container_id}")
+          options << "-t inner=#{@job_container_id}"
         end
-        options = [
+        options += [
           "-l \"#{@oar}#{@oar_unit}, walltime=#{@walltime}\"",
           "--name #{env[:machine].name}",
           "--checkpoint 60",
@@ -118,7 +115,7 @@ module VagrantPlugins
         env[:machine].id = job_id
         wait_for_vm(job_id)
       end
-     
+
       def wait_for_vm(job_id)
         @oar_driver.wait_for(job_id)
         @net_driver.attach()

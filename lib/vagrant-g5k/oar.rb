@@ -3,7 +3,7 @@ require 'log4r'
 module VagrantPlugins
   module G5K
     class Oar
-  
+
       include Vagrant::Util::Retryable
 
       attr_accessor :driver
@@ -13,7 +13,7 @@ module VagrantPlugins
         @driver = driver
         @ui = ui
       end
-      
+
       def submit_job(cmd, options)
         # prefix by the oarsub command
         opt = _build_oar_cmd(options)
@@ -26,7 +26,7 @@ module VagrantPlugins
       def delete_job(job_id, options = [])
         cmd = _build_oar_cmd(options)
         cmd = ["oardel", cmd, job_id].join(" ")
-        @driver.exec(cmd) 
+        @driver.exec(cmd)
       end
 
       def check_job(job_id)
@@ -49,7 +49,7 @@ module VagrantPlugins
         end
         nil
       end
-     
+
       def wait_for(job_id)
         job = nil
         begin
@@ -60,7 +60,7 @@ module VagrantPlugins
             end
             if job.nil? or (!job.nil? and job["state"] != "Running")
               @ui.info("Waiting for the job to be running")
-              raise VagrantPlugins::G5K::Errors::JobNotRunning 
+              raise VagrantPlugins::G5K::Errors::JobNotRunning
             end
             break
           end
