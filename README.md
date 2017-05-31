@@ -1,4 +1,4 @@
-> The plugin is updated often, this may include breaking changes.
+> The plugin is updated frequently, this may include breaking changes.
 
 # Vagrant G5K Provider
 This is a [Vagrant](http://www.vagrantup.com) 1.2+ plugin that adds an
@@ -12,6 +12,24 @@ more appropriate name.
 > This plugin requires
   * Vagrant 1.2+,
 
+---
+
+* [Supported operations](#supported-operations)
+* [Usage](#usage)
+* [Configuration](#configuration)
+* [Note on the insecure vagrant key](#note-on-the-insecure-vagrant-key)
+* [Note on shared folders](note-on-local-shared-folders)
+  * [Local files](#local-files)
+  * [Grid5000 home](#grid5000-home)
+* [Note on disk format and backing strategy](#note-on-disk-format-and-backing-strategy)
+* [Note on network configuration](#note-on-network-configuration)
+  * [NAT networking](#nat-networking)
+  * [Bridge networking](#bridge-networking)
+* [Note on resource demand](#note-on-resource-demand)
+* [Reservation in advance](#reservation-in-advance)
+* [Developping](#developping)
+
+---
 
 ## Supported operations
 
@@ -97,11 +115,20 @@ to back the disk image of the virtual machines :
 * `direct`: will use the image directly (you'll need r/w access to the image)
 * `snapshot`: will let `kvm` create an ephemeral copy on write image.
 
+### Use ceph as backing strategy
+
+Vagrant-g5k will look into `~/.ceph/config` on each frontend where VMs are started.
+You can read[1] for further information on how to configure ceph on grid'5000.
+
+[1] : https://www.grid5000.fr/mediawiki/index.php/Ceph
+
 ## Note on network configuration
 
 Two networking modes are supported :
 
-* NAT networking. VMs traffic is NATed to the outside world.  The outside world
+### NAT networking
+
+VMs traffic is NATed to the outside world.  The outside world
   can access the VMs on dedicated ports that are mapped in the host of
   Grid'5000.  
 
@@ -119,7 +146,9 @@ e.g : Assuming `parapluie-1.rennes.grid5000.fr` hosts the VM. A SSH tunnel from
 your local machine to `parapluie-1.rennes.grid5000.fr:8080` will be forwarded to
 the port `80` of the VM.
 
-* Bridge networking. VMs are given an IP from a Grid'5000 subnet. They can thus
+### Bridge networking
+
+VMs are given an IP from a Grid'5000 subnet. They can thus
   communicate with each others using their IPs.
 
 ```
@@ -168,14 +197,6 @@ config.vm.provider "g5k" do |g5k|
   g5k.job_container_id = "your container job id"
 end
 ```
-
-
-## Use ceph as backing strategy
-
-Vagrant-g5k will look into `~/.ceph/config` on each frontend where VMs are started.
-You can read[1] for further information on how to configure ceph on grid'5000.
-
-[1] : https://www.grid5000.fr/mediawiki/index.php/Ceph
 
 ## Developping
 
