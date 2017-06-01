@@ -188,7 +188,7 @@ If you plan to use a reservation or if you expect all your VMs to be ready
 almost on the same time you can use a job container (see:
 https://www.grid5000.fr/mediawiki/index.php/Advanced_OAR#Container_jobs)
 
-* First create you container job using OAR cli from the fronted of your choice.
+* First create you container job using OAR cli from the frontend of your choice.
 * Then instruct vagrant-g5k about this job container id in the Vagrantfile :
 
 ```
