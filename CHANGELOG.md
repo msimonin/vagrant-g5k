@@ -1,4 +1,4 @@
-# 0.9.5 (unreleased)
+# 0.9.5
 
   * Fix import error on command 
   [[-]](https://github.com/msimonin/vagrant-g5k/commit/d5b69cc48c2e38de0895498c7bf1dfe7df2fa96c)
