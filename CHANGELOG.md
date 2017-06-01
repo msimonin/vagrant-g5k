@@ -1,7 +1,12 @@
 # 0.9.5 (unreleased)
 
-  * Fix import error on command
-  * bridge mode now reserves a /18 and take ips in the first 1024 ips.
+  * Fix import error on command 
+  [[-]](https://github.com/msimonin/vagrant-g5k/commit/d5b69cc48c2e38de0895498c7bf1dfe7df2fa96c)
+  * bridge mode now reserves a /18 and take ips in the first 1024 ips. 
+  [[-]](https://github.com/msimonin/vagrant-g5k/commit/9d7511e030cae63c6496c7c96fb713c6347dbadd)
+  * Support for container job
+  [[-]](https://github.com/msimonin/vagrant-g5k/commit/cf30db9324a2a5dc29b96f43372786b4c7843e53)
+  * Document sharing g5k user home
 
 # 0.9.4
 
