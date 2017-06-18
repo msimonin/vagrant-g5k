@@ -40,7 +40,7 @@ module VagrantPlugins
 
       def init_oar_unit(cpu, mem)
         if cpu != -1 and mem != -1
-          unit = "core=#{cpu}"
+          unit = "nodes=1/core=#{cpu}"
         else
           unit = "nodes=1"
         end
