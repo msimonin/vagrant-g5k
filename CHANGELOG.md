@@ -1,5 +1,7 @@
-# 0.9.6 (Unreleased)
+# 0.9.6
 
+  * Fix Multiple nodes may be reserved for a single vm 
+  [[-]](https://github.com/msimonin/vagrant-g5k/commit/c90d61ed7cdcf90dd5c903736c5153168e35a1f0)
 
 # 0.9.5
 
