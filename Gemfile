@@ -10,5 +10,5 @@ group :development do
 end
 
 group :plugins do
-  gem "vagrant-g5k" , path: "."
+  gemspec
 end

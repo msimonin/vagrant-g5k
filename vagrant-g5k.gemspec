@@ -16,8 +16,8 @@ Gem::Specification.new do |s|
   s.rubyforge_project         = "vagrant-g5k"
 
   s.add_runtime_dependency "iniparse", "~> 1.4", ">= 1.4.2"
-  s.add_runtime_dependency "net-ssh", "~> 3.0", ">= 3.0.2"
-  s.add_runtime_dependency "net-scp", "~> 1.1", ">= 1.1.2"
+  s.add_runtime_dependency "net-ssh", "~> 4.1.0"
+  s.add_runtime_dependency "net-scp", "~> 1.2.0"
   s.add_runtime_dependency "net-ssh-multi", "~> 1.2", ">=1.2.1"
 
   s.add_development_dependency "rake"
