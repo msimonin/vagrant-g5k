@@ -1,4 +1,8 @@
-# 0.9.7 (current)
+# 0.9.7
+
+  * Fix vagrant 1.9.5 compatibility. Note that it breaks compatibility with older version of
+   vagrant
+    [[-]](https://github.com/msimonin/vagrant-g5k/commit/29f823c2460e03d5d93e6b2077d1af1b0d17e63b)
 
 # 0.9.6
 
