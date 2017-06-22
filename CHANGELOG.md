@@ -1,3 +1,7 @@
+# 0.9.8
+
+  * TODO
+
 # 0.9.7
 
   * Fix vagrant 1.9.5 compatibility. Note that it breaks compatibility with older version of
