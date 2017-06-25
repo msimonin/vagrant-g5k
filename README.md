@@ -102,8 +102,27 @@ mount -t 9p -o trans=virtio hostshare /g5k -oversion=9p2000.L
 
 Virtual Machines can be booted either :
 
-* From a `qcow2` image stored in the frontend filesystem
+* From a `qcow2` image stored in the frontend filesystem : 
+
+```
+g5k.image = {
+  :path     => # path to the image (absolute or reltive to the user home)
+  :strategy => # strategy to use (see below)
+}
+```
+
 * From a rbd image stored in one of the ceph cluster of Grid'5000.
+
+```
+g5k.image = {
+  :pool     => # ceph pool to use 
+  :rbd      => # rbd in the pool to use
+  :conf     => # path to the ceph config file
+  :id       => # id to use to contact ceph
+  :strategy => # strategy to use (see below)
+}
+```
+
 
 Once the base image is chosen, you can pick one of the following strategy
 to back the disk image of the virtual machines :
