@@ -73,7 +73,7 @@ export TMPDIR=/tmp
 # Clean shutdown of the VM at the end of the OAR job
 clean_shutdown() {
   echo "Caught shutdown signal at $(date)"
-  echo "system_powerdown" | nc -U /tmp/vagrant-g5k.mon
+  echo "system_powerdown" | nc -U /tmp/vagrant-g5k.$OAR_JOB_ID.mon
 }
 
 trap clean_shutdown 12
