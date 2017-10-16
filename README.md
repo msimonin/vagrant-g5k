@@ -1,3 +1,5 @@
+[![Gem Version](https://badge.fury.io/rb/vagrant-g5k.svg)](https://badge.fury.io/rb/vagrant-g5k)
+
 > The plugin is updated frequently, this may include breaking changes.
 
 # Vagrant G5K Provider
