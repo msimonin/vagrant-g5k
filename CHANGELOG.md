@@ -1,6 +1,7 @@
 # 0.9.8
 
-  * TODO
+  * Fix wrong monitor socket path when OAR job is killed
+  [[-]](https://github.com/msimonin/vagrant-g5k/commit/eb03586257210350f237db8c22005ff877de1051)
 
 # 0.9.7
 
